@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6b4a">
+<title>Teranga Navette</title>
+<meta name="description" content="L'application des transporteurs : voyages, places, réservations en ligne, itinéraire GPS, Wave et Orange Money.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Teranga Navette – l'application des transporteurs">
+<meta property="og:description" content="Voyages, places, réservations en ligne, itinéraire GPS, Wave et Orange Money, comptes.">
+<meta property="og:url" content="https://seckappssn-maker.github.io/teranga-navette/">
+<meta property="og:image" content="https://seckappssn-maker.github.io/teranga-navette/copertina.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="T. Navette">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+/* Mise en page : une colonne de téléphone. En haut le nom du service et les onglets, dessous les voyages comme des cartes avec les places en sièges. */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --ink:#14261f; --muted:#56675f; --line:#d6ded8;
+  --accent:#e8a317; --accent-ink:#2b1d00; --green:#0f6b4a; --green-soft:#dff0e7;
+  --warn:#b4540c; --warn-soft:#fbeadb; --red:#b3261e; --red-soft:#fbe4e2;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Figtree",system-ui,sans-serif;
+  color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1714; --surface:#17221d; --ink:#e8efe9; --muted:#9db0a6; --line:#2a3a32;
+  --accent:#f0b43a; --accent-ink:#2b1d00; --green:#4fc493; --green-soft:#183a2b;
+  --warn:#f19a55; --warn-soft:#3a2716; --red:#f2786f; --red-soft:#3a1d1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1714; --surface:#17221d; --ink:#e8efe9; --muted:#9db0a6; --line:#2a3a32;
+  --accent:#f0b43a; --accent-ink:#2b1d00; --green:#4fc493; --green-soft:#183a2b;
+  --warn:#f19a55; --warn-soft:#3a2716; --red:#f2786f; --red-soft:#3a1d1b; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.45;overflow-x:hidden;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:0 110px}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(10px + env(safe-area-inset-top,0px)) 0 8px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand>div{min-width:0}
+h1{font-family:var(--display);font-weight:800;font-size:1.35rem;margin:0;letter-spacing:-.01em;overflow-wrap:anywhere;line-height:1.15}
+h1 span{color:var(--accent)}
+.sync{font-size:.85rem;color:var(--muted);white-space:nowrap}
+.sync.err{color:var(--red);font-weight:700}
+nav.tabs{display:flex;gap:6px;margin-top:10px}
+nav.tabs button{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 .95rem var(--body);padding:10px 6px;border-radius:999px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+h2{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:24px 0 10px;text-wrap:balance}
+.day{font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;margin:22px 0 8px}
+.card,.trip{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;min-width:0}
+.trip{margin-bottom:10px}
+.card>*,.trip>*{min-width:0}
+.trip-top{display:flex;gap:12px;align-items:flex-start}
+.trip-top>div{min-width:0}
+.time{font-family:var(--display);font-weight:800;font-size:1.65rem;font-variant-numeric:tabular-nums;line-height:1}
+.route{font-weight:800;font-size:1.05rem;overflow-wrap:anywhere}
+.route small{display:block;color:var(--muted);font-weight:500;font-size:.92rem}
+.seats{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.seat{width:22px;height:26px;border-radius:6px 6px 4px 4px;border:2px solid var(--green);background:transparent}
+.seat.full{background:var(--green)}
+.seat-label{font-size:.92rem;color:var(--muted);margin-left:4px}
+.pill{display:inline-block;font-size:.85rem;font-weight:800;padding:3px 9px;border-radius:999px}
+.pill.ok{background:var(--green-soft);color:var(--green)}
+.pill.due{background:var(--warn-soft);color:var(--warn)}
+.pill.neutral{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.p{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;border-top:1px dashed var(--line);padding-top:10px}
+.p-main{min-width:0;flex:1 1 100%}
+.p-name{font-weight:700;overflow-wrap:anywhere}
+.p-sub{font-size:.92rem;color:var(--muted);overflow-wrap:anywhere}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 1rem var(--body);padding:11px 14px;border-radius:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.dark{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.small{padding:8px 12px;font-size:.95rem;min-height:40px}
+.btn.danger{color:var(--red)}
+.btn.full{width:100%}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{min-width:0}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+label{display:grid;gap:4px;font-size:.95rem;font-weight:700;color:var(--muted);min-width:0}
+input,select,textarea{font:500 1.05rem var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;width:100%;min-width:0;max-width:100%}
+textarea{min-height:90px}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-height:48px;text-align:left}
+input::-webkit-date-and-time-value{text-align:left}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sum div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+.sum b{display:block;font-family:var(--display);font-size:1.05rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sum span{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800}
+.neg{color:var(--red)} .pos{color:var(--green)}
+.mv{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:9px 0}
+.mv>div{min-width:0;flex:1}
+.mv b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+.note{font-size:.95rem;color:var(--muted);margin:0}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet>div{background:var(--bg);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(22px + env(safe-area-inset-bottom,0px))}
+.sheet h3{font-family:var(--display);margin:0 0 12px;font-size:1.3rem}
+.toggle{display:flex;gap:6px}
+.toggle button{flex:1}
+.toggle button[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 .95rem var(--body);padding:9px 13px;border-radius:999px;cursor:pointer}
+.gps{font-size:.85rem;font-weight:800;color:var(--green)}
+.nogps{font-size:.85rem;font-weight:800;color:var(--warn)}
+.map{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.map svg{display:block;width:100%;height:auto}
+.stops{display:grid;gap:8px}
+.stop{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px}
+.stop .p-main{flex:1;min-width:0}
+.num{flex-shrink:0;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:800 .95rem var(--display)}
+.num.up{background:var(--green);color:#fff}
+.num.down{background:var(--accent);color:var(--accent-ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.9rem;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.inbox{margin-top:14px;border:2px solid var(--accent);border-radius:16px;padding:12px;display:grid;gap:10px;background:var(--surface)}
+.inbox-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.inbox-h b{font-family:var(--display);font-size:1.1rem}
+.badge{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 9px;font-weight:800;font-size:.95rem;margin-left:6px}
+.req{border-top:1px dashed var(--line);padding-top:10px;display:grid;gap:6px}
+.banner{margin-top:12px;border:2px solid var(--accent);background:var(--surface);border-radius:14px;padding:12px;display:grid;gap:8px;font-size:.98rem}
+.banner.bad{border-color:var(--red);background:var(--red-soft)}
+.lock-on{font-size:.85rem;color:var(--muted)}
+.lockbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:800 .85rem var(--body);cursor:pointer;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;z-index:90;max-width:calc(100% - 32px);text-align:center}
+/* écrans plein : connexion, PIN, blocage */
+#full{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto}
+#full>div{max-width:440px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:14px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo svg{flex-shrink:0}
+.logo b{font-family:var(--display);font-size:1.6rem;line-height:1.05}
+.logo b span{color:var(--accent);display:block}
+.lockwrap{display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:40px}
+.dots{display:flex;gap:16px}
+.dots span{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink)}
+.dots span.on{background:var(--ink)}
+.pad{display:grid;grid-template-columns:repeat(3,76px);gap:14px}
+.pad button{height:76px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 1.7rem var(--display);cursor:pointer}
+.pad button.txt{font:800 .9rem var(--body);border:0;background:transparent}
+.f-pl{display:grid;gap:8px}
+.f-pl button{text-align:left;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:12px;cursor:pointer;font:600 .95rem var(--body)}
+.f-pl button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.f-pl b{font-size:1.05rem}
+.tr{display:grid;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.tr:first-child{border-top:0;padding-top:0}
+.tr-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800}
+.sw{position:relative;width:52px;height:30px;flex-shrink:0}
+.sw input{opacity:0;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw input:checked+span{background:var(--green)}
+.sw input:checked+span::after{transform:translateX(22px)}
+.lnk{font-weight:800;color:var(--green);overflow-wrap:anywhere;font-size:.95rem}
+table.adm{width:100%;border-collapse:collapse}
+.ab{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="sheet" id="sheet" hidden><div id="sheet-body"></div></div>
+<div id="full" hidden><div id="full-body"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =================== outils =================== */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+const uid=()=>Math.random().toString(36).slice(2,10);
+const fcfa=n=>(Math.round(n||0)).toLocaleString("fr-FR").replace(/[  ]/g," ")+" F";
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=()=>iso(new Date());
+const addDays=(s,n)=>{const d=new Date(s+"T12:00");d.setDate(d.getDate()+n);return iso(d)};
+const fdate=s=>s?s.slice(8,10)+"/"+s.slice(5,7)+"/"+s.slice(0,4):"—";
+const dayName=s=>{if(s===today())return"Aujourd'hui";if(s===addDays(today(),1))return"Demain";if(s===addDays(today(),-1))return"Hier";
+  return new Date(s+"T12:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})};
+const diffDays=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5);
+function phoneDigits(t){let d=String(t||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);if(d.length===9)d="221"+d;return d}
+const waNum=phoneDigits;
+const nice=t=>{const d=String(t||"").replace(/\D/g,"").replace(/^221(?=\d{9}$)/,"");return d.length===9?d.replace(/(\d\d)(\d{3})(\d\d)(\d\d)/,"$1 $2 $3 $4"):String(t||"")};
+function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2600)}
+
+/* =================== villes du Sénégal =================== */
+const LIEUX={
+  dakar:{n:"Dakar",lat:14.6928,lng:-17.4467},touba:{n:"Touba",lat:14.8610,lng:-15.8770},aibd:{n:"Aéroport AIBD",lat:14.6739,lng:-17.0733,aero:1},
+  thies:{n:"Thiès",lat:14.7910,lng:-16.9256},mbacke:{n:"Mbacké",lat:14.7908,lng:-15.9081},diourbel:{n:"Diourbel",lat:14.6550,lng:-16.2314},
+  saintlouis:{n:"Saint-Louis",lat:16.0326,lng:-16.4818},louga:{n:"Louga",lat:15.6181,lng:-16.2244},kaolack:{n:"Kaolack",lat:14.1652,lng:-16.0726},
+  mbour:{n:"Mbour",lat:14.4198,lng:-16.9640},saly:{n:"Saly",lat:14.4470,lng:-17.0170},rufisque:{n:"Rufisque",lat:14.7167,lng:-17.2667},
+  pikine:{n:"Pikine",lat:14.7550,lng:-17.3900},keurmassar:{n:"Keur Massar",lat:14.7800,lng:-17.3100},diamniadio:{n:"Diamniadio",lat:14.7200,lng:-17.1830},
+  tivaouane:{n:"Tivaouane",lat:14.9500,lng:-16.8167},kebemer:{n:"Kébémer",lat:15.3667,lng:-16.4500},bambey:{n:"Bambey",lat:14.7000,lng:-16.4500},
+  fatick:{n:"Fatick",lat:14.3390,lng:-16.4111},kaffrine:{n:"Kaffrine",lat:14.1059,lng:-15.5508},nioro:{n:"Nioro du Rip",lat:13.7500,lng:-15.7833},
+  joal:{n:"Joal",lat:14.1667,lng:-16.8333},ziguinchor:{n:"Ziguinchor",lat:12.5833,lng:-16.2719},kolda:{n:"Kolda",lat:12.8939,lng:-14.9411},
+  sedhiou:{n:"Sédhiou",lat:12.7081,lng:-15.5569},tambacounda:{n:"Tambacounda",lat:13.7707,lng:-13.6673},kedougou:{n:"Kédougou",lat:12.5556,lng:-12.1744},
+  matam:{n:"Matam",lat:15.6559,lng:-13.2554},richardtoll:{n:"Richard-Toll",lat:16.4625,lng:-15.7008},podor:{n:"Podor",lat:16.6522,lng:-14.9592},
+  linguere:{n:"Linguère",lat:15.3953,lng:-15.1194},dahra:{n:"Dahra",lat:15.3500,lng:-15.4833}};
+function lieu(id){return LIEUX[id]||(S.set.perso||[]).find(x=>x.id===id)||{n:id}}
+const nomL=id=>lieu(id).n;
+const pairK=(a,b)=>[a,b].sort().join("|");
+function routesOn(){const out=[];for(const [k,t] of Object.entries(S.set.trajets||{})){if(!t.on)continue;const[a,b]=k.split("|");
+  if(!S.set.lieux.includes(a)||!S.set.lieux.includes(b))continue;out.push(a+">"+b,b+">"+a)}return out}
+const rA=r=>r.split(">")[0], rB=r=>r.split(">")[1];
+const rName=r=>nomL(rA(r))+" → "+nomL(rB(r));
+const tarif=r=>{const t=(S.set.trajets||{})[pairK(rA(r),rB(r))]||{};return{place:+t.place||0,voiture:+t.voiture||0}};
+const PAYN={cash:"💵 Espèces",wave:"Wave",om:"Orange Money"};
+
+/* =================== formules =================== */
+const FORMULES={
+  essentiel:{nom:"Essentiel",prix:5000,veh:1,itin:false,chauff:false,txt:"1 véhicule · voyages, passagers, page de réservation, reçus, comptes"},
+  pro:{nom:"Pro",prix:10000,veh:3,itin:true,chauff:false,txt:"Jusqu'à 3 véhicules · + itinéraire GPS automatique (ordre des arrêts) et tournée Google Maps"},
+  premium:{nom:"Premium",prix:15000,veh:99,itin:true,chauff:true,txt:"Véhicules sans limite · + chauffeurs : feuille de route envoyée sur WhatsApp, comptes par véhicule"}};
+const F=()=>FORMULES[S.set.formule]||FORMULES.premium;
+
+/* =================== configuration (config.json) =================== */
+let CFG={supabase_url:"",supabase_key:"",whatsapp:"221778790006",paiement:"77 879 00 06",nom:"Seck Tech"};
+const MAIL_DOM="@teranganavette.app", GRACE=3, EPOCH="1970-01-01T00:00:00Z";
+const KEY_O="terangaNavette_v1", KEY_D="terangaNavette_demo", KEY_PIN="terangaNavette_pin";
+
+/* =================== données =================== */
+let S=null, SB=null, USER=null, DEMO=false, MODE="boot", AB=null, snap={}, lastPull=EPOCH, syncing=false, pushing=false, pushT=null, syncSt="";
+let tab="voyages", REQ=[], reqErr=false, reqAt=null, pubSt={t:0,err:""}, pubT=null;
+const COLS=["viaggi","spese"];
+function baseSet(){return{nom:"",gerant:"",tels:"",wave:"",om:"",formule:"premium",lieux:[],perso:[],trajets:{},fisse:[],
+  vehicules:[{id:"v1",nom:"Voiture 1",places:4,chauffeur:"",tel:""}],slug:"",ntfy:"tn-"+uid()+uid()}}
+function emptyS(){return{set:baseSet(),viaggi:[],spese:[]}}
+function seed(){
+  const t=today(),d=addDays(t,1);
+  const s={...baseSet(),nom:"Car Touba (exemple)",gerant:"Modou",tels:"77 000 00 00",wave:"77 000 00 00",om:"77 000 00 00",slug:"exemple",
+    lieux:["touba","dakar","aibd"],trajets:{[pairK("touba","dakar")]:{on:1,place:6000,voiture:22000},[pairK("touba","aibd")]:{on:1,place:8000,voiture:30000},[pairK("dakar","aibd")]:{on:1,place:5000,voiture:18000}},
+    fisse:[{id:uid(),route:"touba>dakar",ora:"07:00",veh:"v1"},{id:uid(),route:"dakar>touba",ora:"17:00",veh:"v1"}],
+    vehicules:[{id:"v1",nom:"Peugeot 504",places:4,chauffeur:"Modou",tel:"77 000 00 00"},{id:"v2",nom:"Minibus",places:14,chauffeur:"Ibra",tel:"70 000 00 05"}]};
+  return{exemple:true,set:s,spese:[{id:uid(),data:t,tipo:"Carburant",importo:15000,veh:"v1"},{id:uid(),data:t,tipo:"Péage autoroute",importo:3000,veh:"v1"}],
+    viaggi:[
+      {id:uid(),data:t,ora:"07:00",route:"touba>dakar",veh:"v1",pax:[
+        {id:uid(),nome:"Modou (exemple)",tel:"77 000 00 01",ritiro:"Darou Marnane",posR:{lat:14.8790,lng:-15.8900},arrivo:"Parcelles Assainies",posA:{lat:14.7637,lng:-17.4384},posti:2,prezzo:12000,pagato:12000,pay:"wave"},
+        {id:uid(),nome:"Awa (exemple)",tel:"77 000 00 02",ritiro:"Ndamatou",posR:{lat:14.8665,lng:-15.8650},arrivo:"Colobane",posA:{lat:14.6935,lng:-17.4475},posti:1,prezzo:6000,pagato:0,pay:"cash"},
+        {id:uid(),nome:"Ibra (exemple)",tel:"70 000 00 05",ritiro:"Touba Mosquée",posR:{lat:14.8610,lng:-15.8770},arrivo:"Pikine",posA:{lat:14.7550,lng:-17.3900},posti:1,prezzo:6000,pagato:6000,pay:"om"}]},
+      {id:uid(),data:t,ora:"17:00",route:"dakar>touba",veh:"v1",pax:[
+        {id:uid(),nome:"Cheikh (exemple)",tel:"78 000 00 03",ritiro:"Colobane",arrivo:"Darou Khoudoss",posti:1,prezzo:6000,pagato:3000}]},
+      {id:uid(),data:d,ora:"10:30",route:"aibd>touba",veh:"v2",pax:[
+        {id:uid(),nome:"Fatou (exemple)",tel:"76 000 00 04",ritiro:"Vol AF718 arrivée 09:40",posR:{lat:14.6739,lng:-17.0733},arrivo:"Touba Bélel",posA:{lat:14.8480,lng:-15.8700},posti:3,prezzo:24000,pagato:8000,pay:"wave"}]}],
+    demoReq:[{id:"ex1",created_at:new Date().toISOString(),data:{ref:"NV1310-4521",route:"touba>dakar",data:d,ora:"07:00",posti:2,nome:"Seynabou (exemple)",tel:"77 000 00 09",
+      ritiro:"Touba Darou Khoudoss",posR:{lat:14.8560,lng:-15.8820},arrivo:"Liberté 6",posA:{lat:14.7230,lng:-17.4610},prezzo:12000,pay:"wave"}}]};
+}
+function migrate(){const b=baseSet();S.set={...b,...(S.set||{})};COLS.forEach(c=>{if(!Array.isArray(S[c]))S[c]=[]});
+  if(!S.set.vehicules.length)S.set.vehicules=b.vehicules;S.viaggi.forEach(v=>{v.pax=v.pax||[];if(!v.veh)v.veh=S.set.vehicules[0].id})}
+const vehs=()=>S.set.vehicules;
+const veh=id=>vehs().find(v=>v.id===id)||vehs()[0];
+const occ=v=>v.pax.reduce((s,p)=>s+(+p.posti||0),0);
+const cap=v=>+veh(v.veh).places||4;
+
+/* =================== en ligne (Supabase) =================== */
+function writeCache(){try{if(DEMO)localStorage.setItem(KEY_D,JSON.stringify(S));else if(USER)localStorage.setItem(KEY_O,JSON.stringify({uid:USER.id,S,snap,lastPull,AB}))}catch(e){toast("Mémoire du téléphone pleine")}}
+function readCache(){try{return JSON.parse(localStorage.getItem(KEY_O)||"null")}catch(e){return null}}
+function rowsOf(){const m={};COLS.forEach(c=>S[c].forEach(r=>{if(r&&r.id)m[c+"|"+r.id]=r}));const st={...S.set};delete st.formule;m["set|main"]=st;return m}
+function computeOps(){const cur=rowsOf(),ops=[],keys=[];
+  for(const k in cur){const js=JSON.stringify(cur[k]);if(snap[k]===js)continue;
+    const old=snap[k]?JSON.parse(snap[k]):{},nw=JSON.parse(js),patch={};
+    for(const f in nw)if(JSON.stringify(nw[f])!==JSON.stringify(old[f]))patch[f]=nw[f];
+    for(const f in old)if(!(f in nw))patch[f]=null;
+    const p=k.indexOf("|");ops.push({col:k.slice(0,p),id:k.slice(p+1),patch});keys.push([k,js])}
+  for(const k in snap)if(!(k in cur)){const p=k.indexOf("|");ops.push({col:k.slice(0,p),id:k.slice(p+1),del:true});keys.push([k,null])}
+  return{ops,keys}}
+function setLocal(col,id,data){if(col==="set"){S.set={...baseSet(),...data,formule:S.set.formule};return}
+  const a=S[col];if(!a)return;const i=a.findIndex(x=>x.id===id);if(i>=0)a[i]=data;else a.push(data)}
+function applyRow(row){const k=row.col+"|"+row.id,cur=rowsOf(),local=cur[k];
+  if(local&&JSON.stringify(local)!==snap[k])return false;
+  if(row.deleted){delete snap[k];if(!local)return false;if(S[row.col])S[row.col]=S[row.col].filter(x=>x.id!==row.id);return true}
+  if(!row.data||typeof row.data!=="object")return false;
+  if(row.col!=="set"&&!row.data.id)row.data.id=row.id;
+  setLocal(row.col,row.id,row.data);snap[k]=JSON.stringify(rowsOf()[k]);return true}
+function setSync(st){syncSt=st;const d=$("syncDot");if(d){d.textContent=DEMO?"Démo":st==="ok"?"☁ ✓":st==="err"?"☁ hors ligne":"☁ …";d.className="sync "+st}}
+async function push(){if(DEMO||!SB||!USER||pushing)return;const{ops,keys}=computeOps();if(!ops.length){setSync("ok");return}
+  pushing=true;try{for(let i=0;i<ops.length;i+=150){const r=await SB.rpc("navette_put",{p_ops:ops.slice(i,i+150)});if(r.error)throw r.error}
+    keys.forEach(([k,js])=>{if(js===null)delete snap[k];else snap[k]=js});writeCache();setSync("ok")}
+  catch(e){setSync("err");if(/abonnement expire/i.test(String(e&&e.message))){await fetchAb();render()}}
+  finally{pushing=false}}
+async function pull(full){if(DEMO||!SB||!USER)return false;let changed=false,maxT=full?EPOCH:lastPull;
+  const since=new Date(new Date(lastPull).getTime()-5000).toISOString();
+  let from=0;for(;;){let q=SB.from("navette_rows").select("col,id,data,deleted,updated_at").eq("user_id",USER.id);if(!full)q=q.gt("updated_at",since);
+    const r=await q.order("updated_at").range(from,from+999);if(r.error)throw r.error;const rows=r.data||[];
+    rows.forEach(row=>{if(new Date(row.updated_at)>new Date(maxT))maxT=row.updated_at;if(applyRow(row))changed=true});
+    if(rows.length<1000)break;from+=1000}
+  lastPull=maxT;if(changed)migrate();writeCache();return changed}
+async function sync(full){if(DEMO||!SB||!USER||syncing)return;syncing=true;let ch=false;
+  try{if(full){ch=await pull(true);await push()}else{await push();ch=await pull(false)}if(syncSt!=="err")setSync("ok")}catch(e){setSync("err")}finally{syncing=false}
+  if(ch)softRender()}
+function save(){if(S.exemple&&!DEMO)S.exemple=false;writeCache();if(!DEMO&&USER){clearTimeout(pushT);setSync("wait");pushT=setTimeout(()=>sync(false),500)}schedulePub()}
+function change(fn){fn();save();render()}
+function softRender(){const a=document.activeElement;if(MODE!=="app")return;if(!$("sheet").hidden||(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))return;render()}
+async function fetchAb(){if(DEMO||!SB||!USER)return;try{const r=await SB.from("navette_abonnements").select("trial_end,paid_until,formule,price").eq("user_id",USER.id).maybeSingle();
+  if(r.error||!r.data)return;AB=r.data;S.set.formule=AB.formule||"premium";writeCache()}catch(e){}}
+function abState(){if(DEMO||!AB)return{st:"ok",left:99,trial:false};const end=[AB.trial_end,AB.paid_until].filter(Boolean).sort().pop(),left=diffDays(today(),end),trial=!AB.paid_until||AB.trial_end>=AB.paid_until;
+  if(left>=0)return{st:left<=5?"warn":"ok",left,end,trial};if(-left<=GRACE)return{st:"grace",left,end,trial};return{st:"blocked",left,end,trial}}
+const abPrix=()=>(AB&&AB.price)||F().prix;
+
+/* =================== page de réservation publique =================== */
+const resaBase=()=>{const h=location.href.split(/[?#]/)[0].replace(/[^/]*$/,"");return /^https?:/.test(location.protocol)?h+"reserver.html":"https://seckappssn-maker.github.io/teranga-navette/reserver.html"};
+const resaUrl=()=>S.set.slug?resaBase()+"?c="+encodeURIComponent(S.set.slug):"";
+function pageData(){const t0=today(),t14=addDays(t0,14),rs=routesOn();
+  const lieux=S.set.lieux.map(id=>{const l=lieu(id);return{id,n:l.n,lat:l.lat||null,lng:l.lng||null,aero:l.aero?1:0}});
+  const trajets=Object.entries(S.set.trajets).filter(([k,t])=>t.on&&k.split("|").every(x=>S.set.lieux.includes(x))).map(([k,t])=>({a:k.split("|")[0],b:k.split("|")[1],place:+t.place||0,voiture:+t.voiture||0}));
+  return{nom:S.set.nom,tels:S.set.tels,wave:S.set.wave,om:S.set.om,lieux,trajets,ntfy:S.set.ntfy,
+    fisse:S.set.fisse.filter(f=>rs.includes(f.route)).map(f=>({r:f.route,o:f.ora,f:+veh(f.veh).places||4})),
+    viaggi:S.viaggi.filter(v=>v.data>=t0&&v.data<=t14&&rs.includes(v.route)).map(v=>({r:v.route,d:v.data,o:v.ora,f:Math.max(0,cap(v)-occ(v)),cap:cap(v)}))}}
+function schedulePub(){if(DEMO||!USER||!S.set.slug)return;clearTimeout(pubT);pubT=setTimeout(publish,2500)}
+async function publish(){if(DEMO||!SB||!USER||!S.set.slug)return false;
+  try{const r=await SB.rpc("navette_publier",{p_slug:S.set.slug,p_data:pageData()});if(r.error)throw r.error;pubSt={t:Date.now(),err:""};return true}
+  catch(e){const m=String(e&&e.message||e);pubSt={t:pubSt.t,err:/deja pris/.test(m)?"Ce code est déjà pris par un autre transporteur. Choisissez-en un autre.":/invalide/.test(m)?"Code invalide : lettres, chiffres et tirets, 3 à 30 caractères.":/expire/.test(m)?"Abonnement expiré : la page est fermée.":"Pas de connexion : la page sera mise à jour plus tard."};return false}
+  finally{if(tab==="reglages")softRender()}}
+
+/* =================== réservations reçues =================== */
+async function checkReq(){if(DEMO){REQ=S.demoReq||[];return}
+  if(!SB||!USER)return;try{const r=await SB.from("navette_bookings").select("id,data,created_at").eq("user_id",USER.id).order("created_at");if(r.error)throw r.error;
+    const n=(r.data||[]).length,old=REQ.length;REQ=r.data||[];reqErr=false;reqAt=new Date();if(n!==old)softRender();else{const c=$("reqAt");if(c)c.textContent=reqStatus()}}
+  catch(e){reqErr=true}}
+const reqStatus=()=>DEMO?"Exemple de démo":reqErr?"Pas de connexion pour vérifier":reqAt?"Vérifié à "+reqAt.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"";
+async function dropReq(id){if(DEMO){S.demoReq=(S.demoReq||[]).filter(x=>x.id!==id);REQ=S.demoReq;writeCache();return true}
+  try{const r=await SB.from("navette_bookings").delete().eq("id",id);if(r.error)throw r.error;REQ=REQ.filter(x=>x.id!==id);return true}catch(e){toast("Pas de connexion, réessayez");return false}}
+function findTrip(q,need){const list=S.viaggi.filter(x=>x.route===q.route&&x.data===q.data&&x.ora===q.ora);
+  return list.find(v=>need==="V"?occ(v)===0:cap(v)-occ(v)>=need)||null}
+async function accept(id){const b=REQ.find(x=>x.id===id);if(!b)return;const q=b.data;const intera=q.posti==="V";
+  let v=findTrip(q,intera?"V":(+q.posti||1));
+  if(!v){const used=S.viaggi.filter(x=>x.data===q.data&&x.ora===q.ora).map(x=>x.veh);const fv=vehs().find(x=>!used.includes(x.id))||vehs()[0];
+    v={id:uid(),route:q.route,data:q.data,ora:q.ora,veh:fv.id,pax:[]};S.viaggi.push(v)}
+  v.pax.push({id:uid(),nome:q.nome||"",tel:q.tel||"",ritiro:q.ritiro||"",posR:q.posR||null,arrivo:q.arrivo||"",posA:q.posA||null,
+    posti:intera?cap(v):(+q.posti||1),prezzo:+q.prezzo||0,pagato:0,intera,pay:q.pay||"",ref:q.ref||""});
+  save();if(await dropReq(id)){render();toast("Ajouté au voyage de "+q.ora)}else render()}
+function recuLink(q,ok){const u=resaUrl();if(!u)return"";const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  return u+"&recu="+enc({ref:q.ref,route:q.route,data:q.data,ora:q.ora,posti:q.posti,nome:q.nome,ritiro:q.ritiro,arrivo:q.arrivo,pay:q.pay,prezzo:q.prezzo})+(ok?"&ok=1":"")}
+function confirmMsg(q){const l=recuLink(q,true);
+  return `Salam ${q.nome}, votre réservation${q.ref?" N° "+q.ref:""} ${rName(q.route)} du ${fdate(q.data)} à ${q.ora} est confirmée. Prix : ${fcfa(q.prezzo)}CFA.${l?"\nVotre reçu : "+l:""}\nMerci ! ${S.set.nom}`}
+function remind(v,p){return `Salam ${p.nome}, rappel : départ ${rName(v.route)} le ${fdate(v.data)} à ${v.ora}. Prise en charge : ${p.ritiro||"à confirmer"}. Prix : ${fcfa(p.prezzo)}. Merci ! ${S.set.nom}`}
+
+/* =================== affichage principal =================== */
+function render(){
+  if(MODE!=="app")return;
+  const a=abState();
+  if(a.st==="blocked"){showBlocked(a);return}
+  $("full").hidden=pinLocked?false:true;
+  const nreq=REQ.length;
+  $("app").innerHTML=`<div class="wrap"><header class="top"><div class="brand"><div><h1>${esc(S.set.nom||"Mon service")} <span>· Navette</span></h1></div>
+    <span style="display:flex;gap:8px;align-items:center"><span class="sync" id="syncDot"></span>${pinGet()?`<button class="lockbtn" data-a="lock">🔒</button>`:""}</span></div>
+    <nav class="tabs" role="tablist">${[["voyages","Voyages"+(nreq?" ("+nreq+")":"")],["comptes","Comptes"],["reglages","Réglages"]].map(([k,n])=>`<button role="tab" aria-selected="${tab===k}" data-a="tab" data-v="${k}">${n}</button>`).join("")}</nav></header>
+    ${banner(a)}${tab==="voyages"?vVoyages():tab==="comptes"?vComptes():vReglages()}</div>`;
+  setSync(syncSt);
+  if(tab==="comptes")bindComptes(); if(tab==="reglages")bindReglages();
+}
+function banner(a){
+  if(DEMO)return`<div class="banner"><div><b>Mode démo :</b> les données sont des exemples, rien n'est envoyé. Pour l'utiliser vraiment, créez votre compte (7 jours gratuits).</div><button class="btn small green" data-a="quitDemo">Créer mon compte</button></div>`;
+  if(S.exemple)return"";
+  const needSetup=!S.set.lieux.length||!routesOn().length;
+  let h="";
+  if(needSetup)h+=`<div class="banner"><div><b>Pour commencer :</b> choisissez vos villes, vos trajets et vos prix, puis le code de votre page de réservation.</div><button class="btn small primary" data-a="tab" data-v="reglages">Ouvrir les réglages</button></div>`;
+  if(a.st==="warn"||a.st==="grace")h+=`<div class="banner ${a.st==="grace"?"bad":""}"><div>${a.st==="grace"?`<b>Abonnement fini le ${fdate(a.end)}.</b> L'app sera bloquée dans ${GRACE+a.left} jour(s).`:a.trial?`<b>Essai gratuit :</b> encore ${a.left} jour(s), jusqu'au ${fdate(a.end)}.`:`<b>Abonnement :</b> fin dans ${a.left} jour(s), le ${fdate(a.end)}.`} Payez ${fcfa(abPrix())} par Wave ou Orange Money au <b>${esc(CFG.paiement)}</b>.</div>
+    <a class="btn small green" href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, je veux payer mon abonnement Teranga Navette ("+F().nom+"). Mon numéro : "+nice(USER&&USER.email.split("@")[0]))}" target="_blank" rel="noopener">J'ai payé / écrire sur WhatsApp</a></div>`;
+  return h}
+
+/* ---------- Voyages ---------- */
+function vVoyages(){
+  let h=vInbox();
+  h+=`<div class="row" style="margin-top:14px"><button class="btn primary" data-a="newTrip">+ Nouveau voyage</button>${S.set.fisse.length?`<button class="btn" data-a="fixed">Créer les départs fixes de demain</button>`:""}</div>`;
+  const from=addDays(today(),-1);
+  const list=S.viaggi.filter(v=>v.data>=from).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));
+  if(!list.length)return h+`<p class="empty">Aucun voyage prévu.<br>Touchez « Nouveau voyage »${S.set.fisse.length?" ou créez les départs fixes":""}.</p>`;
+  if(S.exemple)h+=`<p class="note" style="margin-top:12px">Ce sont des voyages d'exemple.</p>`;
+  let last="";
+  for(const v of list){
+    if(v.data!==last){h+=`<div class="day">${esc(dayName(v.data))}</div>`;last=v.data}
+    const n=occ(v),tot=cap(v),free=Math.max(0,tot-n),ve=veh(v.veh);
+    const inc=v.pax.reduce((s,p)=>s+(+p.prezzo||0),0),pag=v.pax.reduce((s,p)=>s+(+p.pagato||0),0);
+    let seats="";for(let i=0;i<Math.min(tot,16);i++)seats+=`<span class="seat${i<n?" full":""}"></span>`;
+    h+=`<article class="trip"><div class="trip-top"><div class="time">${esc(v.ora)}</div>
+      <div class="route" style="flex:1">${esc(rName(v.route))}<small>${fcfa(inc)} prévus · ${fcfa(pag)} encaissés${vehs().length>1||ve.chauffeur?`<br>🚐 ${esc(ve.nom)}${ve.chauffeur?" · "+esc(ve.chauffeur):""}`:""}</small></div></div>
+      <div class="seats">${seats}${tot>16?`<span class="seat-label">${n}/${tot}</span>`:""}<span class="seat-label">${free?free+" place"+(free>1?"s":"")+" libre"+(free>1?"s":""):"Complet"}</span></div>
+      <div style="display:grid;gap:4px">${v.pax.map(p=>{const due=(+p.prezzo||0)-(+p.pagato||0);
+        return`<div class="p"><div class="p-main"><div class="p-name">${esc(p.nome)} · ${p.intera?"voiture entière":p.posti+" place"+(p.posti>1?"s":"")}</div>
+          <div class="p-sub">${esc(p.tel)}${p.ritiro?" · "+esc(p.ritiro):""}${p.arrivo?" → "+esc(p.arrivo):""}</div>
+          <div class="p-sub">${p.posR?'<span class="gps">● DÉPART GPS</span>':'<span class="nogps">○ départ sans GPS</span>'} ${p.posA?'<span class="gps">● ARRIVÉE GPS</span>':'<span class="nogps">○ arrivée sans GPS</span>'}</div>
+          <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">${p.pay&&PAYN[p.pay]?`<span class="pill neutral">${PAYN[p.pay]}</span>`:""}${due<=0?`<span class="pill ok">Payé ${fcfa(p.prezzo)}</span>`:`<span class="pill due">Reste ${fcfa(due)}</span>`}</div></div>
+          <a class="btn small" href="https://wa.me/${waNum(p.tel)}?text=${encodeURIComponent(remind(v,p))}" target="_blank" rel="noopener">WhatsApp</a>
+          <button class="btn small" data-a="editPax" data-v="${v.id}|${p.id}">Modifier</button></div>`}).join("")}</div>
+      <div class="row"><button class="btn primary" data-a="itin" data-v="${v.id}" ${v.pax.length?"":"disabled"}>Itinéraire</button>
+        <button class="btn dark" data-a="addPax" data-v="${v.id}" ${free?"":"disabled"}>+ Passager</button>
+        <button class="btn" data-a="editTrip" data-v="${v.id}">Modifier le voyage</button></div></article>`}
+  return h}
+function vInbox(){
+  const list=REQ.slice().sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
+  let h=`<div class="inbox"><div class="inbox-h"><b>Réservations en ligne${list.length?`<span class="badge">${list.length}</span>`:""}</b><button class="btn small" data-a="check">Vérifier</button></div>
+    <div class="note" id="reqAt">${esc(reqStatus())}</div>`;
+  if(!list.length)h+=`<p class="note">Aucune nouvelle réservation. Quand un client réserve sur votre page, elle arrive ici toute seule.</p>`;
+  for(const b of list){const q=b.data||{};if(!q.route)continue;
+    const need=q.posti==="V"?"V":(+q.posti||1),v=findTrip(q,need),same=S.viaggi.filter(x=>x.route===q.route&&x.data===q.data&&x.ora===q.ora);
+    const fits=!!v||same.length<vehs().length||!same.length;
+    h+=`<div class="req"><div class="p-name">${esc(q.nome)} · ${need==="V"?"voiture entière":need+" place"+(need>1?"s":"")} · ${fcfa(q.prezzo)}</div>
+      ${q.ref?`<div class="p-sub">N° <b>${esc(q.ref)}</b>${q.pay?" · paie avec <b>"+(PAYN[q.pay]||esc(q.pay))+"</b>":""}</div>`:""}
+      <div class="p-sub"><b>${esc(rName(q.route))}</b> · ${esc(dayName(q.data))} ${esc(q.ora)}</div>
+      <div class="p-sub">${esc(q.tel)} · ${esc(q.ritiro||"-")}${q.arrivo?" → "+esc(q.arrivo):""}</div>
+      <div class="p-sub">${q.posR?'<span class="gps">● DÉPART GPS</span>':'<span class="nogps">○ départ sans GPS</span>'} ${q.posA?'<span class="gps">● ARRIVÉE GPS</span>':""}</div>
+      ${fits?"":`<div class="p-sub" style="color:var(--red);font-weight:800">Plus de place à cette heure. Appelez le client pour un autre départ.</div>`}
+      <div class="row"><button class="btn primary small" data-a="accept" data-v="${esc(b.id)}" ${fits?"":"disabled"}>Accepter</button>
+      <a class="btn small" href="https://wa.me/${waNum(q.tel)}?text=${encodeURIComponent(confirmMsg(q))}" target="_blank" rel="noopener">WhatsApp + reçu</a>
+      <button class="btn small danger" data-a="reject" data-v="${esc(b.id)}">Refuser</button></div></div>`}
+  return h+"</div>"}
+
+/* ---------- fenêtres ---------- */
+function openSheet(h){$("sheet-body").innerHTML=h;$("sheet").hidden=false;$("sheet").scrollTop=0}
+function closeSheet(){$("sheet").hidden=true;$("sheet-body").innerHTML="";render()}
+$("sheet").addEventListener("click",e=>{if(e.target===$("sheet"))closeSheet()});
+const val=id=>{const e=$(id);return e?e.value:""};
+const routeOpts=sel=>{const rs=routesOn();if(sel&&!rs.includes(sel))rs.unshift(sel);return rs.map(k=>`<option value="${k}"${k===sel?" selected":""}>${esc(rName(k))}</option>`).join("")};
+const vehOpts=sel=>vehs().map(v=>`<option value="${v.id}"${v.id===sel?" selected":""}>${esc(v.nom)} (${v.places} places)</option>`).join("");
+function needRoutes(){if(routesOn().length)return false;toast("Choisissez d'abord vos villes et trajets dans Réglages");tab="reglages";render();return true}
+
+function tripSheet(id){if(!id&&needRoutes())return;
+  const v=id?S.viaggi.find(x=>x.id===id):{data:addDays(today(),1),ora:"07:00",route:routesOn()[0],veh:vehs()[0].id,pax:[]};
+  openSheet(`<h3>${id?"Modifier le voyage":"Nouveau voyage"}</h3><div class="card">
+    <label>Trajet<select id="t-route">${routeOpts(v.route)}</select></label>
+    <div class="grid2"><label>Jour<input id="t-data" type="date" value="${v.data}"></label><label>Heure de départ<input id="t-ora" type="time" value="${v.ora}"></label></div>
+    ${vehs().length>1?`<label>Véhicule<select id="t-veh">${vehOpts(v.veh)}</select></label>`:""}
+    <div class="row"><button class="btn primary" data-a="saveTrip" data-v="${id||""}">Enregistrer</button><button class="btn" data-a="close">Annuler</button>
+    ${id?`<button class="btn danger" data-a="delTrip" data-v="${id}">Supprimer</button>`:""}</div></div>`)}
+function saveTrip(id){const nv={route:val("t-route"),data:val("t-data"),ora:val("t-ora"),veh:$("t-veh")?val("t-veh"):(id?S.viaggi.find(x=>x.id===id).veh:vehs()[0].id)};
+  if(!nv.data||!nv.ora)return toast("Mettez le jour et l'heure");
+  if(id){const v=S.viaggi.find(x=>x.id===id);if(occ(v)>(+veh(nv.veh).places||4))return toast("Trop de passagers pour ce véhicule");Object.assign(v,nv)}else S.viaggi.push({id:uid(),pax:[],...nv});
+  save();closeSheet()}
+
+function paxSheet(tripId,paxId){
+  const v=S.viaggi.find(x=>x.id===tripId);
+  const p=paxId?v.pax.find(x=>x.id===paxId):{nome:"",tel:"",ritiro:"",posti:1,pagato:0,intera:false};
+  const pr=tarif(v.route),tot=cap(v),others=occ(v)-(paxId?(+p.posti||0):0),maxFree=tot-others;
+  const air=lieu(rA(v.route)).aero;
+  openSheet(`<h3>${paxId?"Modifier le passager":"Nouveau passager"}</h3><div class="card">
+    <label>Collez ici le message WhatsApp du client<textarea id="p-msg" placeholder="Appuyez longtemps sur le message, Copier, puis collez ici : nom, places et positions se remplissent tout seuls"></textarea></label>
+    <button class="btn" data-a="fillMsg" data-v="${tripId}|${paxId||""}">Remplir depuis le message</button><p class="note" id="p-fill-note" hidden></p>
+    <label>Nom<input id="p-nome" value="${esc(p.nome)}"></label>
+    <label>Téléphone<input id="p-tel" type="tel" inputmode="tel" value="${esc(p.tel)}"></label>
+    <label>${air?"Vol et heure d'arrivée":"Où le prendre (quartier)"}<input id="p-ritiro" value="${esc(p.ritiro)}" placeholder="${air?"ex. AF718, arrivée 09:40":"ex. Darou Marnane, marché…"}"></label>
+    <label>Position GPS du départ (lien Google Maps)<input id="p-posR" value="${p.posR?p.posR.lat+","+p.posR.lng:""}" placeholder="ex. https://maps.google.com/?q=14.87,-15.88"></label>
+    <label>Où il descend (quartier)<input id="p-arrivo" value="${esc(p.arrivo||"")}"></label>
+    <label>Position GPS de l'arrivée<input id="p-posA" value="${p.posA?p.posA.lat+","+p.posA.lng:""}" placeholder="lien Google Maps"></label>
+    <div class="toggle"><button class="btn" id="p-m0" data-a="paxMode" data-v="0" aria-pressed="${!p.intera}">À la place</button>
+      <button class="btn" id="p-m1" data-a="paxMode" data-v="1" aria-pressed="${!!p.intera}" ${others>0?"disabled":""}>Voiture entière</button></div>
+    <div class="grid2"><label>Places<input id="p-posti" type="number" min="1" max="${maxFree}" value="${p.intera?tot:p.posti}" inputmode="numeric" ${p.intera?"disabled":""}></label>
+      <label>Prix (FCFA)<input id="p-prezzo" type="number" min="0" inputmode="numeric" value="${p.prezzo??pr.place}"></label></div>
+    <label>Paiement<select id="p-pay"><option value="">—</option>${Object.entries(PAYN).map(([k,n])=>`<option value="${k}"${p.pay===k?" selected":""}>${n}</option>`).join("")}</select></label>
+    <label>Déjà payé (FCFA)<input id="p-pagato" type="number" min="0" inputmode="numeric" value="${p.pagato||0}"></label>
+    <div class="row"><button class="btn primary" data-a="savePax" data-v="${tripId}|${paxId||""}">Enregistrer</button><button class="btn" data-a="paidAll">A tout payé</button>
+      <button class="btn" data-a="close">Annuler</button>${paxId?`<button class="btn danger" data-a="delPax" data-v="${tripId}|${paxId}">Retirer</button>`:""}</div>
+    <p class="note">Places libres dans ce voyage : ${maxFree} sur ${tot}</p></div>`);
+  $("p-posti").oninput=()=>{if($("p-m1").getAttribute("aria-pressed")!=="true")$("p-prezzo").value=(+$("p-posti").value||0)*pr.place};
+}
+function paxMode(m){const ids=$("p-msg").closest(".card").querySelector("[data-a=savePax]").dataset.v.split("|"),v=S.viaggi.find(x=>x.id===ids[0]),pr=tarif(v.route);
+  $("p-m0").setAttribute("aria-pressed",!m);$("p-m1").setAttribute("aria-pressed",!!m);const po=$("p-posti");
+  if(m){po.value=cap(v);po.disabled=true;$("p-prezzo").value=pr.voiture}else{po.disabled=false;po.value=1;$("p-prezzo").value=pr.place}}
+function savePax(tripId,paxId){const v=S.viaggi.find(x=>x.id===tripId),tot=cap(v);const p=paxId?v.pax.find(x=>x.id===paxId):null;
+  const others=occ(v)-(p?(+p.posti||0):0),maxFree=tot-others,intera=$("p-m1").getAttribute("aria-pressed")==="true";
+  if(!val("p-nome").trim())return toast("Écrivez le nom");
+  const n=Math.min(Math.max(1,+val("p-posti")||1),maxFree);
+  const np={nome:val("p-nome").trim(),tel:val("p-tel").trim(),ritiro:val("p-ritiro").trim(),posti:intera?tot:n,prezzo:+val("p-prezzo")||0,pagato:+val("p-pagato")||0,
+    intera,pay:val("p-pay"),arrivo:val("p-arrivo").trim(),posR:parsePos(val("p-posR")),posA:parsePos(val("p-posA"))};
+  if(p)Object.assign(p,np);else v.pax.push({id:uid(),...np});save();closeSheet()}
+function fillMsg(tripId,paxId){const v=S.viaggi.find(x=>x.id===tripId),pr=tarif(v.route),r=parseMsg(val("p-msg")),note=$("p-fill-note");let n=0;
+  const put=(id,x)=>{if(x!=null&&x!==""){$(id).value=x;n++}};
+  put("p-nome",r.nome);if(r.pay)put("p-pay",r.pay);if(r.tel&&r.tel!=="-")put("p-tel",r.tel);put("p-ritiro",r.ritiro);put("p-arrivo",r.arrivo);
+  if(r.posR)put("p-posR",r.posR.lat+","+r.posR.lng);if(r.posA)put("p-posA",r.posA.lat+","+r.posA.lng);
+  if(r.intera&&!$("p-m1").disabled)paxMode(1);else if(r.posti){paxMode(0);$("p-posti").value=Math.min(r.posti,+$("p-posti").max||r.posti);$("p-prezzo").value=$("p-posti").value*pr.place;n++}
+  note.hidden=false;note.textContent=n?`${n} cases remplies. Vérifiez puis Enregistrer.`:"Rien trouvé dans ce message. Collez le message envoyé depuis la page de réservation."}
+function parsePos(s){const m=String(s||"").match(/(-?\d{1,2}\.\d{2,})\s*,\s*(-?\d{1,3}\.\d{2,})/);if(!m)return null;const lat=+m[1],lng=+m[2];
+  if(Math.abs(lat)>90||Math.abs(lng)>180)return null;return{lat,lng}}
+function parseMsg(t){const r={},get=re=>{const m=t.match(re);return m?m[1].trim():null};
+  r.nome=get(/Nom\s*:\s*(.+)/i);const pm=get(/Paiement\s*:\s*(.+)/i);if(pm)r.pay=/wave/i.test(pm)?"wave":/orange/i.test(pm)?"om":/esp/i.test(pm)?"cash":"";
+  r.tel=get(/T[ée]l\s*:\s*(.+)/i);r.ritiro=get(/(?:Prise en charge|Vol)\s*:\s*(.+)/i);r.arrivo=get(/D[ée]p[ôo]t\s*:\s*(.+)/i);
+  const pl=get(/Places\s*:\s*(.+)/i);if(pl){if(/voiture|enti/i.test(pl))r.intera=true;else r.posti=parseInt(pl)||null}
+  const found=[];for(const l of t.split(/\n/)){const p=parsePos(l);if(!p)continue;if(/📍|prise|départ/i.test(l)&&!r.posR)r.posR=p;else if(/🏁|d[ée]p[ôo]t|arriv/i.test(l)&&!r.posA)r.posA=p;else found.push(p)}
+  if(!r.posR&&found.length)r.posR=found.shift();if(!r.posA&&found.length)r.posA=found.shift();
+  if(r.ritiro&&parsePos(r.ritiro))r.ritiro="";if(r.arrivo&&parsePos(r.arrivo))r.arrivo="";return r}
+
+/* ---------- itinéraire ---------- */
+const km=(a,b)=>{const R=6371,t=x=>x*Math.PI/180,dl=t(b.lat-a.lat),dn=t(b.lng-a.lng);const h=Math.sin(dl/2)**2+Math.cos(t(a.lat))*Math.cos(t(b.lat))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+function orderStops(list,first){const rest=[...list];if(!rest.length)return[];rest.sort((x,y)=>first(x)-first(y));const out=[rest.shift()];
+  while(rest.length){const last=out[out.length-1].pos;rest.sort((x,y)=>km(last,x.pos)-km(last,y.pos));out.push(rest.shift())}return out}
+function centre(id,pts){const l=lieu(id);if(l.lat)return{lat:l.lat,lng:l.lng};if(!pts.length)return null;return{lat:pts.reduce((s,p)=>s+p.lat,0)/pts.length,lng:pts.reduce((s,p)=>s+p.lng,0)/pts.length}}
+function planTrip(v){const a=rA(v.route),b=rB(v.route),la=lieu(a),lb=lieu(b);const ups=[],downs=[],upNo=[],downNo=[];
+  for(const p of v.pax){const pr=p.posR||(la.aero?{lat:la.lat,lng:la.lng}:null),pa=p.posA||(lb.aero?{lat:lb.lat,lng:lb.lng}:null);
+    (pr?ups:upNo).push({p,pos:pr,txt:p.ritiro||la.n,city:la.n});(pa?downs:downNo).push({p,pos:pa,txt:p.arrivo||lb.n,city:lb.n})}
+  const O=centre(a,ups.map(s=>s.pos)),D=centre(b,downs.map(s=>s.pos));
+  const U=D?orderStops(ups,s=>-km(s.pos,D)):ups, Dn=O?orderStops(downs,s=>km(s.pos,O)):downs;
+  return{a,b,U,Dn,upNo,downNo,O,D}}
+const navUrl=s=>s.pos?`https://www.google.com/maps/dir/?api=1&destination=${s.pos.lat},${s.pos.lng}&travelmode=driving`:`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.txt+", "+s.city+", Sénégal")}`;
+function tourUrl(stops){const u=[];for(const s of stops){const k=s.pos.lat.toFixed(5)+","+s.pos.lng.toFixed(5);if(u[u.length-1]!==k)u.push(k)}
+  if(!u.length)return null;const dest=u.pop();return`https://www.google.com/maps/dir/?api=1&destination=${dest}${u.length?"&waypoints="+encodeURIComponent(u.join("|")):""}&travelmode=driving`}
+function miniMap(stops,cityPt,cityName,kind){const pts=stops.map(s=>s.pos);if(!pts.length)return"";const all=cityPt?[...pts,cityPt]:pts;const W=360,H=220,pad=28;
+  const la0=Math.min(...all.map(p=>p.lat)),la1=Math.max(...all.map(p=>p.lat)),ln0=Math.min(...all.map(p=>p.lng)),ln1=Math.max(...all.map(p=>p.lng));
+  const k=Math.cos(la0*Math.PI/180),sx=(ln1-ln0)*k||.01,sy=(la1-la0)||.01,sc=Math.min((W-2*pad)/sx,(H-2*pad)/sy);
+  const X=p=>pad+((p.lng-ln0)*k)*sc+((W-2*pad)-sx*sc)/2,Y=p=>H-pad-(p.lat-la0)*sc-((H-2*pad)-sy*sc)/2;
+  const path=stops.map((s,i)=>(i?"L":"M")+X(s.pos).toFixed(1)+" "+Y(s.pos).toFixed(1)).join(" ");
+  const col=kind==="up"?"var(--green)":"var(--accent)",tc=kind==="up"?"#fff":"var(--accent-ink)";
+  return`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ordre des arrêts à ${esc(cityName)}"><rect width="${W}" height="${H}" fill="var(--surface)"/>
+    ${cityPt?`<circle cx="${X(cityPt)}" cy="${Y(cityPt)}" r="5" fill="var(--muted)"/><text x="${X(cityPt)+8}" y="${Y(cityPt)-8}" font-size="12" fill="var(--muted)" font-family="var(--body)">centre ${esc(cityName)}</text>`:""}
+    <path d="${path}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 5" opacity=".5"/>
+    ${stops.map((s,i)=>`<circle cx="${X(s.pos)}" cy="${Y(s.pos)}" r="13" fill="${col}"/><text x="${X(s.pos)}" y="${Y(s.pos)+4.5}" text-anchor="middle" font-size="13" font-weight="800" fill="${tc}" font-family="var(--display)">${i+1}</text>`).join("")}</svg>`}
+function itinSheet(id){const v=S.viaggi.find(x=>x.id===id),r=planTrip(v),fm=F();
+  const block=(title,stops,noPos,lid,kind,label)=>{if(!stops.length&&!noPos.length)return"";const cityPt=centre(lid,stops.map(s=>s.pos)),tour=tourUrl(stops);
+    let h=`<h2>${title}</h2>`;
+    if(fm.itin&&stops.length>1)h+=`<div class="map">${miniMap(stops,cityPt,nomL(lid),kind)}<div class="legend"><span><i style="background:${kind==="up"?"var(--green)":"var(--accent)"}"></i>ordre des arrêts</span><span>schéma, pas à l'échelle des routes</span></div></div>
+      ${tour?`<a class="btn primary full" style="margin-top:10px" href="${tour}" target="_blank" rel="noopener">${label}</a>`:""}`;
+    h+=`<div class="stops" style="margin-top:10px">`+stops.map((s,i)=>{const d=i&&fm.itin?km(stops[i-1].pos,s.pos):null;
+      return`<div class="stop"><span class="num ${kind}">${fm.itin?i+1:"•"}</span><div class="p-main"><div class="p-name">${esc(s.p.nome)}</div><div class="p-sub">${esc(s.txt)}${d!=null?` · ${d<1?Math.round(d*1000)+" m":d.toFixed(1)+" km"} après l'arrêt d'avant`:""}</div></div>
+      <a class="btn small" href="${navUrl(s)}" target="_blank" rel="noopener">Aller</a></div>`}).join("")
+      +noPos.map(s=>`<div class="stop"><span class="num" style="border:2px dashed var(--warn);color:var(--warn)">?</span><div class="p-main"><div class="p-name">${esc(s.p.nome)}</div><div class="p-sub">${esc(s.txt)} · sans GPS</div></div>
+      <a class="btn small" href="${navUrl(s)}" target="_blank" rel="noopener">Chercher</a></div>`).join("")+`</div>`;return h};
+  const ve=veh(v.veh);
+  openSheet(`<h3>${esc(rName(v.route))} · ${esc(v.ora)}</h3>
+    ${fm.itin?`<p class="note">L'app fait l'ordre : d'abord le plus loin de la sortie de ville, puis chaque fois le plus proche. À l'arrivée, d'abord le plus proche de l'entrée de ville.</p>`
+      :`<div class="banner"><div>Avec la formule <b>Pro</b>, l'app met les arrêts dans le bon ordre et lance la tournée complète dans Google Maps.</div></div>`}
+    ${block("Qui prendre",fm.itin?r.U:byPax(r.U,v),r.upNo,r.a,"up","Lancer la tournée des départs")}
+    ${block("Qui déposer",fm.itin?r.Dn:byPax(r.Dn,v),r.downNo,r.b,"down","Lancer la tournée des arrivées")}
+    ${fm.chauff?`<h2>Chauffeur</h2><div class="card"><div class="p-sub">${esc(ve.nom)}${ve.chauffeur?" · "+esc(ve.chauffeur):""}${ve.tel?" · "+esc(ve.tel):""}</div>
+      ${ve.tel?`<a class="btn green full" href="https://wa.me/${waNum(ve.tel)}?text=${encodeURIComponent(feuille(v,r))}" target="_blank" rel="noopener">Envoyer la feuille de route au chauffeur</a>`:`<p class="note">Mettez le numéro du chauffeur dans Réglages › Véhicules.</p>`}</div>`
+      :`<p class="note" style="margin-top:16px">Formule <b>Premium</b> : feuille de route envoyée au chauffeur sur WhatsApp.</p>`}
+    <button class="btn full" style="margin-top:16px" data-a="close">Fermer</button>`)}
+const byPax=(l,v)=>l.slice().sort((x,y)=>v.pax.indexOf(x.p)-v.pax.indexOf(y.p));
+function feuille(v,r){const gm=p=>p?`https://maps.google.com/?q=${p.lat},${p.lng}`:"";
+  let t=`🚐 ${S.set.nom} — feuille de route\n${rName(v.route)} · ${dayName(v.data)} ${fdate(v.data)} à ${v.ora}\n\nÀ PRENDRE :\n`;
+  [...r.U,...r.upNo].forEach((s,i)=>{t+=`${i+1}. ${s.p.nome} (${s.p.intera?"voiture":s.p.posti+" pl."}) ${s.p.tel||""}\n   ${s.txt}${s.pos?"\n   "+gm(s.pos):""}\n`});
+  t+=`\nÀ DÉPOSER :\n`;[...r.Dn,...r.downNo].forEach((s,i)=>{t+=`${i+1}. ${s.p.nome} — ${s.txt}${s.pos?"\n   "+gm(s.pos):""}\n`});
+  const due=v.pax.reduce((s,p)=>s+Math.max(0,(+p.prezzo||0)-(+p.pagato||0)),0);if(due)t+=`\nÀ encaisser : ${fcfa(due)}\n`;
+  const tu=tourUrl(r.U);if(tu)t+=`\nTournée départs : ${tu}\n`;const td=tourUrl(r.Dn);if(td)t+=`Tournée arrivées : ${td}\n`;return t}
+
+/* ---------- Comptes ---------- */
+let cMois=today().slice(0,7);
+function vComptes(){const m=cMois,fm=F();
+  const inc=[];S.viaggi.filter(v=>v.data.startsWith(m)).forEach(v=>v.pax.forEach(p=>{if(+p.pagato)inc.push({data:v.data,desc:`${p.nome} · ${rName(v.route)}`,imp:+p.pagato,veh:v.veh})}));
+  const spe=S.spese.filter(s=>s.data.startsWith(m));
+  const ti=inc.reduce((s,x)=>s+x.imp,0),ts=spe.reduce((s,x)=>s+(+x.importo||0),0);
+  const daInc=S.viaggi.filter(v=>v.data.startsWith(m)).reduce((s,v)=>s+v.pax.reduce((q,p)=>q+Math.max(0,(+p.prezzo||0)-(+p.pagato||0)),0),0);
+  const mlab=new Date(m+"-15T12:00").toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  let h=`<div class="row" style="margin-top:16px;align-items:center;justify-content:space-between"><button class="btn small" data-a="mois" data-v="-1">‹</button><b style="font-family:var(--display);font-size:1.15rem;text-transform:capitalize">${mlab}</b><button class="btn small" data-a="mois" data-v="1">›</button></div>
+    <div class="sum" style="margin-top:12px"><div><span>Encaissé</span><b class="pos">${fcfa(ti)}</b></div><div><span>Dépenses</span><b class="neg">${fcfa(ts)}</b></div><div><span>Reste</span><b>${fcfa(ti-ts)}</b></div>
+    ${daInc?`<div style="grid-column:1/-1"><span>Encore à encaisser</span><b style="color:var(--warn)">${fcfa(daInc)}</b></div>`:""}</div>`;
+  if(fm.chauff&&vehs().length>1)h+=`<h2>Par véhicule</h2><div class="card">${vehs().map(ve=>{const i=inc.filter(x=>x.veh===ve.id).reduce((s,x)=>s+x.imp,0),d=spe.filter(x=>(x.veh||vehs()[0].id)===ve.id).reduce((s,x)=>s+(+x.importo||0),0);
+    return`<div class="mv"><div><b>${esc(ve.nom)}</b><div class="p-sub">${esc(ve.chauffeur||"")} · encaissé ${fcfa(i)} · dépenses ${fcfa(d)}</div></div><b>${fcfa(i-d)}</b></div>`}).join("")}</div>`;
+  h+=`<h2>Ajouter une dépense</h2><div class="card"><div class="grid2"><label>Type<select id="sp-tipo">${["Carburant","Péage autoroute","Réparation","Lavage","Chauffeur","Autre"].map(x=>`<option>${x}</option>`).join("")}</select></label>
+    <label>Montant (FCFA)<input id="sp-imp" type="number" inputmode="numeric" min="0"></label></div>
+    <div class="grid2"><label>Date<input id="sp-data" type="date" value="${today()}"></label>${vehs().length>1?`<label>Véhicule<select id="sp-veh">${vehOpts("")}</select></label>`:"<span></span>"}</div>
+    <button class="btn dark" data-a="addSpesa">Enregistrer la dépense</button></div>
+    <h2>Mouvements du mois</h2>`;
+  const rows=[...inc.map(x=>({...x,t:"in"})),...spe.map(s=>({data:s.data,desc:s.tipo+(vehs().length>1?" · "+veh(s.veh).nom:""),imp:-(+s.importo||0),t:"sp",id:s.id}))].sort((a,b)=>b.data.localeCompare(a.data));
+  h+=rows.length?`<div class="card" style="gap:0">${rows.map(r=>`<div class="mv"><div><div class="p-sub">${fdate(r.data).slice(0,5)}</div><div style="overflow-wrap:anywhere">${esc(r.desc)}</div></div><b class="${r.imp<0?"neg":"pos"}">${fcfa(r.imp)}</b>
+    ${r.t==="sp"?`<button class="btn small danger" data-a="delSpesa" data-v="${r.id}" aria-label="Supprimer">✕</button>`:""}</div>`).join("")}</div>`:`<p class="empty">Aucun mouvement ce mois-ci</p>`;
+  return h}
+function bindComptes(){}
+
+/* ---------- Réglages ---------- */
+function vReglages(){const s=S.set,fm=F(),a=abState(),rs=S.set.lieux;
+  let h="";
+  // abonnement
+  h+=`<h2>Mon abonnement</h2><div class="card">`;
+  if(DEMO){h+=`<p class="note">Dans la démo, essayez chaque formule :</p><div class="f-pl">${Object.entries(FORMULES).map(([k,f])=>`<button data-a="demoF" data-v="${k}" aria-pressed="${s.formule===k}"><b>${f.nom}</b> · ${fcfa(f.prix)} / mois<br><span class="p-sub">${f.txt}</span></button>`).join("")}</div>
+    <div class="row"><button class="btn green" data-a="quitDemo">Créer mon compte</button><button class="btn" data-a="logout">Quitter la démo</button></div>`}
+  else{h+=`<div class="row" style="justify-content:space-between;align-items:center"><b>Formule ${fm.nom}</b><span class="pill ${a.st==="ok"?"ok":"due"}">${a.trial?"Essai gratuit":"Payé"} · ${a.left>=0?a.left+" j":"fini"}</span></div>
+    <p class="note">${a.trial?"Essai gratuit":"Payé"} jusqu'au <b>${fdate(a.end)}</b> · ${fcfa(abPrix())} / mois</p><p class="note">${fm.txt}</p>
+    <p class="note">Pour payer : Wave ou Orange Money au <b>${esc(CFG.paiement)}</b> (${esc(CFG.nom)}). Pour changer de formule, écrivez-nous.</p>
+    <a class="btn green" href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, abonnement Teranga Navette. Mon numéro : "+nice(USER.email.split("@")[0]))}" target="_blank" rel="noopener">Écrire sur WhatsApp</a>`}
+  h+=`</div>`;
+  // service
+  h+=`<h2>Mon service</h2><div class="card">
+    <label>Nom du service (vu par les clients)<input id="s-nom" value="${esc(s.nom)}" placeholder="ex. Car Touba"></label>
+    <label>Gérant<input id="s-gerant" value="${esc(s.gerant)}"></label>
+    <label>Téléphones pour les clients (un ou plusieurs)<input id="s-tels" value="${esc(s.tels)}" inputmode="tel" placeholder="ex. 77 123 45 67, 70 987 65 43"></label>
+    <div class="grid2"><label>Numéro Wave<input id="s-wave" value="${esc(s.wave)}" inputmode="tel"></label><label>Numéro Orange Money<input id="s-om" value="${esc(s.om)}" inputmode="tel"></label></div></div>`;
+  // villes
+  const cat=Object.keys(LIEUX);
+  h+=`<h2>Villes desservies</h2><div class="card"><p class="note">Touchez les villes où vous allez. Les clients choisiront parmi elles.</p>
+    <div class="chips">${cat.map(id=>`<button class="chip" data-a="lieu" data-v="${id}" aria-pressed="${rs.includes(id)}">${esc(LIEUX[id].n)}</button>`).join("")}
+    ${(s.perso||[]).map(l=>`<button class="chip" data-a="lieu" data-v="${l.id}" aria-pressed="${rs.includes(l.id)}">${esc(l.n)}</button>`).join("")}</div>
+    <div class="row"><input id="s-perso" placeholder="Autre lieu (ex. Darou Mousty)" style="flex:1 1 180px"><button class="btn" data-a="addPerso">Ajouter</button></div></div>`;
+  // trajets
+  const sel=rs.slice(),pairs=[];for(let i=0;i<sel.length;i++)for(let j=i+1;j<sel.length;j++)pairs.push(pairK(sel[i],sel[j]));
+  h+=`<h2>Trajets et prix (FCFA)</h2><div class="card">${pairs.length?pairs.map(k=>{const t=s.trajets[k]||{},[x,y]=k.split("|");
+    return`<div class="tr"><div class="tr-h"><span style="min-width:0;overflow-wrap:anywhere">${esc(nomL(x))} ↔ ${esc(nomL(y))}</span><label class="sw" aria-label="Trajet actif"><input type="checkbox" data-tr="${k}" data-f="on" ${t.on?"checked":""}><span></span></label></div>
+    ${t.on?`<div class="grid2"><label>Par place<input type="number" inputmode="numeric" min="0" data-tr="${k}" data-f="place" value="${t.place||""}"></label><label>Voiture entière<input type="number" inputmode="numeric" min="0" data-tr="${k}" data-f="voiture" value="${t.voiture||""}"></label></div>`:""}</div>`}).join("")
+    :`<p class="note">Choisissez au moins deux villes.</p>`}</div>`;
+  // véhicules
+  h+=`<h2>Véhicules${fm.veh<99?` (${vehs().length}/${fm.veh})`:""}</h2><div class="card">${vehs().map((v,i)=>`<div class="tr"><div class="grid2"><label>Nom<input data-ve="${v.id}" data-f="nom" value="${esc(v.nom)}"></label><label>Places passagers<input type="number" inputmode="numeric" min="1" max="60" data-ve="${v.id}" data-f="places" value="${v.places}"></label></div>
+    ${fm.chauff?`<div class="grid2"><label>Chauffeur<input data-ve="${v.id}" data-f="chauffeur" value="${esc(v.chauffeur||"")}"></label><label>Tél. chauffeur<input type="tel" inputmode="tel" data-ve="${v.id}" data-f="tel" value="${esc(v.tel||"")}"></label></div>`:""}
+    ${i?`<button class="btn small danger" style="justify-self:start" data-a="delVeh" data-v="${v.id}">Supprimer ce véhicule</button>`:""}</div>`).join("")}
+    ${vehs().length<fm.veh?`<button class="btn" data-a="addVeh">+ Ajouter un véhicule</button>`:`<p class="note">${fm.veh===1?"Formule Pro : jusqu'à 3 véhicules. Premium : sans limite.":fm.veh===3?"Formule Premium : véhicules sans limite.":""}</p>`}
+    ${fm.chauff?"":`<p class="note">Formule Premium : chauffeurs avec feuille de route sur WhatsApp.</p>`}</div>`;
+  // départs fixes
+  h+=`<h2>Départs fixes chaque jour</h2><div class="card">${s.fisse.length?s.fisse.map(f=>`<div class="row" style="padding-bottom:8px;border-bottom:1px dashed var(--line)">
+    <select data-fx="${f.id}" data-f="route" style="flex:1 1 100%">${routeOpts(f.route)}</select><input type="time" data-fx="${f.id}" data-f="ora" value="${f.ora}" style="flex:1 1 120px">
+    ${vehs().length>1?`<select data-fx="${f.id}" data-f="veh" style="flex:1 1 140px">${vehOpts(f.veh)}</select>`:""}<button class="btn small danger" data-a="delFix" data-v="${f.id}" aria-label="Retirer">✕</button></div>`).join(""):`<p class="note">Aucun départ fixe. Les clients choisiront l'heure qui leur convient.</p>`}
+    <button class="btn" data-a="addFix">+ Ajouter un départ fixe</button><p class="note">Les clients voient ces heures et les places libres sur votre page.</p></div>`;
+  // page clients
+  const u=resaUrl();
+  h+=`<h2>Ma page de réservation</h2><div class="card"><label>Code de votre page (lettres, chiffres, tirets)<input id="s-slug" value="${esc(s.slug)}" placeholder="ex. car-touba" autocapitalize="none" autocorrect="off"></label>
+    ${DEMO?`<p class="note">Avec un compte, votre page s'ouvre avec ce lien.</p>`:`<button class="btn dark" data-a="pub">Enregistrer et mettre en ligne</button>`}
+    ${u?`<div class="lnk">${esc(u)}</div><div class="row"><a class="btn green" href="https://wa.me/?text=${encodeURIComponent("Réservez votre place avec "+(s.nom||"nous")+" en 1 minute : "+u)}" target="_blank" rel="noopener">Partager sur WhatsApp</a><button class="btn" data-a="copyLink">Copier le lien</button><a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Voir la page</a></div>`:""}
+    <p class="note" id="pubNote">${DEMO?"":pubSt.err?`<b style="color:var(--red)">${esc(pubSt.err)}</b>`:pubSt.t?"Page à jour à "+new Date(pubSt.t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+" : villes, prix, horaires et places libres des 14 prochains jours.":s.slug?"":"Choisissez un code puis mettez en ligne."}</p></div>`;
+  // notifications
+  h+=`<h2>Alerte sur le téléphone</h2><div class="card"><p class="note">Pour que le téléphone sonne à chaque réservation : installez l'app gratuite <b>ntfy</b> (App Store ou Play Store), touchez <b>+</b> et écrivez ce nom :</p>
+    <div class="lnk" style="user-select:all">${esc(s.ntfy)}</div><button class="btn small" style="justify-self:start" data-a="copyNtfy">Copier le nom</button><p class="note">Gardez-le pour vous : l'alerte dit seulement « nouvelle réservation », les détails sont dans l'app.</p></div>`;
+  // accès
+  h+=`<h2>Code d'accès</h2><div class="card"><p class="note">${pinGet()?"Un code à 4 chiffres est demandé à l'ouverture et après 5 minutes sans utiliser l'app.":"Ajoutez un code à 4 chiffres pour que personne d'autre n'ouvre l'app sur ce téléphone."}</p>
+    <div class="row"><button class="btn" data-a="pinSet">${pinGet()?"Changer le code":"Mettre un code"}</button>${pinGet()?`<button class="btn danger" data-a="pinOff">Enlever le code</button>`:""}</div></div>`;
+  if(!DEMO)h+=`<h2>Compte</h2><div class="card"><p class="note">Connecté avec le numéro <b>${esc(nice(USER.email.split("@")[0]))}</b></p>
+    <label>Nouveau mot de passe<input id="g-pw" type="password" autocomplete="new-password"></label><button class="btn" data-a="chgPass">Changer le mot de passe</button>
+    <button class="btn danger" data-a="logout">Se déconnecter</button></div>`;
+  return h}
+function bindReglages(){
+  const svc={"s-nom":"nom","s-gerant":"gerant","s-tels":"tels","s-wave":"wave","s-om":"om"};
+  for(const [id,f] of Object.entries(svc)){const e=$(id);if(e)e.onchange=()=>{S.set[f]=e.value.trim();save();if(f==="nom")render()}}
+  const sl=$("s-slug");if(sl)sl.onchange=()=>{const v=sl.value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,30);sl.value=v;S.set.slug=v;save();render()};
+  document.querySelectorAll("[data-tr]").forEach(e=>e.onchange=()=>{const k=e.dataset.tr,f=e.dataset.f;S.set.trajets[k]=S.set.trajets[k]||{on:0,place:0,voiture:0};
+    S.set.trajets[k][f]=f==="on"?(e.checked?1:0):(+e.value||0);save();if(f==="on")render()});
+  document.querySelectorAll("[data-ve]").forEach(e=>e.onchange=()=>{const v=vehs().find(x=>x.id===e.dataset.ve);if(!v)return;const f=e.dataset.f;
+    if(f==="places"){const n=Math.max(1,Math.min(60,+e.value||4));const over=S.viaggi.some(t=>t.veh===v.id&&t.data>=today()&&occ(t)>n);if(over){toast("Des voyages ont déjà plus de passagers");e.value=v.places;return}v.places=n}else v[f]=e.value.trim();save()});
+  document.querySelectorAll("[data-fx]").forEach(e=>e.onchange=()=>{const f=S.set.fisse.find(x=>x.id===e.dataset.fx);if(!f)return;f[e.dataset.f]=e.value;save()});
+}
+
+/* =================== actions (boutons) =================== */
+const ACT={
+  tab:v=>{tab=v;render();scrollTo(0,0)},close:()=>closeSheet(),check:()=>{checkReq().then(render)},
+  newTrip:()=>tripSheet(),editTrip:v=>tripSheet(v),saveTrip:v=>saveTrip(v),
+  delTrip:(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Toucher encore pour supprimer";return}S.viaggi=S.viaggi.filter(x=>x.id!==v);save();closeSheet()},
+  addPax:v=>paxSheet(v),editPax:v=>{const[t,p]=v.split("|");paxSheet(t,p)},savePax:v=>{const[t,p]=v.split("|");savePax(t,p)},paxMode:v=>paxMode(+v),
+  paidAll:()=>{$("p-pagato").value=$("p-prezzo").value},fillMsg:v=>{const[t,p]=v.split("|");fillMsg(t,p)},
+  delPax:(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Toucher encore";return}const[t,p]=v.split("|"),tr=S.viaggi.find(x=>x.id===t);tr.pax=tr.pax.filter(x=>x.id!==p);save();closeSheet()},
+  itin:v=>itinSheet(v),
+  fixed:()=>{const d=addDays(today(),1);let n=0;for(const f of S.set.fisse){if(!routesOn().includes(f.route))continue;
+    if(!S.viaggi.some(v=>v.data===d&&v.ora===f.ora&&v.route===f.route&&v.veh===f.veh)){S.viaggi.push({id:uid(),data:d,ora:f.ora,route:f.route,veh:f.veh||vehs()[0].id,pax:[]});n++}}
+    save();render();toast(n?n+" départ(s) créé(s) pour demain":"Les départs de demain existent déjà")},
+  accept:v=>accept(v),reject:async(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Toucher encore";return}if(await dropReq(v))render()},
+  mois:v=>{const d=new Date(cMois+"-15T12:00");d.setMonth(d.getMonth()+ +v);cMois=iso(d).slice(0,7);render()},
+  addSpesa:()=>{const imp=+val("sp-imp");if(!imp)return toast("Mettez le montant");S.spese.push({id:uid(),data:val("sp-data")||today(),tipo:val("sp-tipo"),importo:imp,veh:$("sp-veh")?val("sp-veh"):vehs()[0].id});save();render();toast("Dépense enregistrée")},
+  delSpesa:(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Sûr ?";return}S.spese=S.spese.filter(s=>s.id!==v);save();render()},
+  lieu:v=>{const l=S.set.lieux;if(l.includes(v))S.set.lieux=l.filter(x=>x!==v);else l.push(v);
+    S.set.lieux.forEach(a=>S.set.lieux.forEach(b=>{if(a<b){const k=pairK(a,b);if(!S.set.trajets[k])S.set.trajets[k]={on:1,place:0,voiture:0}}}));save();render()},
+  addPerso:()=>{const n=val("s-perso").trim();if(!n)return;const id="p-"+uid();S.set.perso.push({id,n:n.slice(0,40)});ACT.lieu(id)},
+  addVeh:()=>{if(vehs().length>=F().veh)return;S.set.vehicules.push({id:"v"+uid(),nom:"Véhicule "+(vehs().length+1),places:4,chauffeur:"",tel:""});save();render()},
+  delVeh:(v,b)=>{if(S.viaggi.some(t=>t.veh===v&&t.data>=today()))return toast("Ce véhicule a des voyages prévus");if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Toucher encore";return}
+    S.set.vehicules=vehs().filter(x=>x.id!==v);S.set.fisse.forEach(f=>{if(f.veh===v)f.veh=vehs()[0].id});save();render()},
+  addFix:()=>{if(needRoutes())return;S.set.fisse.push({id:uid(),route:routesOn()[0],ora:"08:00",veh:vehs()[0].id});save();render()},
+  delFix:v=>{S.set.fisse=S.set.fisse.filter(f=>f.id!==v);save();render()},
+  pub:async()=>{if(!S.set.slug)return toast("Écrivez d'abord le code de la page");if(!routesOn().length)return toast("Activez au moins un trajet");
+    const n=$("pubNote");if(n)n.textContent="Mise en ligne…";await sync(false);const ok=await publish();render();toast(ok?"Page en ligne ✓":"Pas encore en ligne")},
+  copyLink:()=>copy(resaUrl()),copyNtfy:()=>copy(S.set.ntfy),
+  demoF:v=>{S.set.formule=v;if(vehs().length>FORMULES[v].veh)S.set.vehicules=vehs().slice(0,FORMULES[v].veh);writeCache();render()},
+  quitDemo:()=>{DEMO=false;try{localStorage.removeItem(KEY_D)}catch(e){}showAuth("signup")},
+  logout:async()=>{if(DEMO){DEMO=false;try{localStorage.removeItem(KEY_D)}catch(e){}showAuth("login");return}
+    try{await SB.auth.signOut()}catch(e){}try{localStorage.removeItem(KEY_O)}catch(e){}USER=null;S=null;showAuth("login")},
+  chgPass:async()=>{const p=val("g-pw");if(p.length<6)return toast("6 caractères minimum");try{const r=await SB.auth.updateUser({password:p});if(r.error)throw r.error;toast("Mot de passe changé");$("g-pw").value=""}catch(e){toast("Pas de connexion, réessayez")}},
+  pinSet:()=>lockScreen("set1"),pinOff:()=>{try{localStorage.removeItem(KEY_PIN)}catch(e){}render()},lock:()=>lockScreen("enter"),
+};
+async function copy(t){try{await navigator.clipboard.writeText(t);toast("Copié ✓")}catch(e){prompt("Copiez :",t)}}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||b.disabled)return;const f=ACT[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
+
+/* =================== code d'accès (PIN) =================== */
+let pinMode="enter",pinBuf="",pinFirst="",hiddenAt=0,pinLocked=false;
+const pinGet=()=>{try{return localStorage.getItem(KEY_PIN)}catch(e){return null}};
+async function hashPin(p){const s="teranga-navette:"+p;try{const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("")}catch(e){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return"x"+h}}
+function lockScreen(mode,msg){pinMode=mode;pinBuf="";pinLocked=mode==="enter";$("sheet").hidden=true;
+  $("full-body").innerHTML=`<div class="lockwrap"><h2 style="margin:0;text-align:center">${{enter:"Code d'accès",set1:"Choisissez un code à 4 chiffres",set2:"Écrivez-le encore une fois"}[mode]}</h2>
+    <div class="dots" id="dots"><span></span><span></span><span></span><span></span></div><p class="note" id="lock-msg" style="min-height:1.4em;text-align:center">${esc(msg||"")}</p>
+    <div class="pad">${["1","2","3","4","5","6","7","8","9","x","0","del"].map(k=>k==="x"?(mode==="enter"?"<span></span>":`<button class="txt" data-k="cancel">Annuler</button>`):`<button ${k==="del"?'class="txt"':""} data-k="${k}">${k==="del"?"Effacer":k}</button>`).join("")}</div>
+    ${mode==="enter"?`<button class="btn small" data-k="forgot" style="margin-top:8px">Code oublié</button>`:""}</div>`;
+  $("full").hidden=false}
+function drawDots(){document.querySelectorAll("#dots span").forEach((d,i)=>d.classList.toggle("on",i<pinBuf.length))}
+async function pinDone(){const p=pinBuf;
+  if(pinMode==="set1"){pinFirst=p;lockScreen("set2");return}
+  if(pinMode==="set2"){if(p!==pinFirst){lockScreen("set1","Les deux codes étaient différents.");return}try{localStorage.setItem(KEY_PIN,await hashPin(p))}catch(e){}unlockPin();toast("Code enregistré");return}
+  if(await hashPin(p)===pinGet())unlockPin();else{lockScreen("enter","Code faux");navigator.vibrate?.(200)}}
+function unlockPin(){pinLocked=false;$("full").hidden=true;$("full-body").innerHTML="";render()}
+$("full").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;const k=b.dataset.k;
+  if(k==="cancel"){unlockPin();return}
+  if(k==="forgot"){if(DEMO){try{localStorage.removeItem(KEY_PIN)}catch(e){}unlockPin();return}
+    if(confirm("Pour enlever le code, il faut vous reconnecter avec votre numéro et mot de passe. Continuer ?")){try{localStorage.removeItem(KEY_PIN)}catch(e){}pinLocked=false;ACT.logout()}return}
+  if(k==="del"){pinBuf=pinBuf.slice(0,-1);drawDots();return}if(pinBuf.length>=4)return;pinBuf+=k;drawDots();if(pinBuf.length===4)setTimeout(pinDone,120)});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)hiddenAt=Date.now();
+  else{if(MODE==="app"&&hiddenAt&&Date.now()-hiddenAt>5*60e3&&pinGet())lockScreen("enter");if(MODE==="app"){sync(false);checkReq()}}});
+
+/* =================== connexion / inscription =================== */
+const LOGO=`<svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#0f6b4a"/><path d="M12 38v-9c0-3 2-6 5-7l6-3h16c3 0 5 1 7 3l5 6c1 1 1 2 1 3v7c0 2-1 3-3 3h-2" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 41h4m12 0h10" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><circle cx="22" cy="41" r="5" fill="#e8a317"/><circle cx="44" cy="41" r="5" fill="#e8a317"/><path d="M24 22v6m10-6v6" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>`;
+let authMode="login";
+function showAuth(m){MODE="auth";authMode=m||authMode;$("app").innerHTML="";$("sheet").hidden=true;const su=authMode==="signup";const on=!!SB;
+  $("full-body").innerHTML=`<div class="logo">${LOGO}<b>Teranga<span>Navette</span></b></div>
+    <p class="note" style="font-size:1.05rem">L'application des transporteurs : voyages, places, réservations en ligne, itinéraire GPS, Wave et Orange Money.</p>
+    ${on?`<div class="toggle"><button class="btn" data-k2="login" aria-pressed="${!su}">J'ai un compte</button><button class="btn" data-k2="signup" aria-pressed="${su}">Créer un compte</button></div>
+    <div class="card">${su?`<label>Nom de votre service<input id="a-nom" placeholder="ex. Car Touba" autocomplete="organization"></label>`:""}
+      <label>Votre numéro de téléphone<input id="a-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="77 123 45 67"></label>
+      <label>Mot de passe${su?" (6 caractères minimum)":""}<input id="a-pw" type="password" autocomplete="${su?"new-password":"current-password"}"></label>
+      <button class="btn green full" id="a-go">${su?"Créer mon compte · 7 jours gratuits":"Entrer"}</button><p class="note" id="a-msg" style="color:var(--red);font-weight:700"></p>
+      ${su?"":`<p class="note">Mot de passe oublié ? <a href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, j'ai oublié mon mot de passe Teranga Navette.")}" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp</a></p>`}</div>`
+    :`<div class="banner"><div>Les inscriptions ouvrent bientôt. En attendant, essayez la démo.</div></div>`}
+    <button class="btn full" id="a-demo">Essayer la démo sans compte</button>
+    <div class="card" style="gap:6px"><b>Formules</b>${Object.values(FORMULES).map(f=>`<div class="p-sub"><b style="color:var(--ink)">${f.nom} · ${fcfa(f.prix)}/mois</b> — ${f.txt}</div>`).join("")}<p class="note">7 jours d'essai gratuit, sans rien payer.</p></div>
+    <a class="btn" href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, je veux des informations sur Teranga Navette.")}" target="_blank" rel="noopener">Une question ? WhatsApp</a>`;
+  $("full").hidden=false;
+  document.querySelectorAll("[data-k2]").forEach(b=>b.onclick=()=>showAuth(b.dataset.k2));
+  $("a-demo").onclick=startDemo;if($("a-go"))$("a-go").onclick=doAuth}
+async function doAuth(){const su=authMode==="signup",msg=$("a-msg");msg.textContent="";
+  const ph=phoneDigits(val("a-tel")),pw=val("a-pw"),nom=su?val("a-nom").trim():"";
+  if(ph.length<11)return msg.textContent="Écrivez votre numéro (9 chiffres).";if(pw.length<6)return msg.textContent="Mot de passe : 6 caractères minimum.";
+  if(su&&!nom)return msg.textContent="Écrivez le nom de votre service.";
+  const b=$("a-go");b.disabled=true;b.textContent="Patientez…";
+  try{let r=su?await SB.auth.signUp({email:ph+MAIL_DOM,password:pw}):await SB.auth.signInWithPassword({email:ph+MAIL_DOM,password:pw});
+    if(r.error)throw r.error;if(su&&!r.data.session){r=await SB.auth.signInWithPassword({email:ph+MAIL_DOM,password:pw});if(r.error)throw r.error}
+    USER=r.data.user||(r.data.session&&r.data.session.user);
+    const st=await SB.rpc("navette_start",{p_nom:nom||"",p_tel:ph});if(st.error)throw st.error;
+    await openAccount(su?nom:"",ph)}
+  catch(e){const m=String(e&&e.message||e);b.disabled=false;b.textContent=su?"Créer mon compte · 7 jours gratuits":"Entrer";
+    msg.textContent=/already|registered/i.test(m)?"Ce numéro a déjà un compte : touchez « J'ai un compte ».":/invalid login|credentials/i.test(m)?"Numéro ou mot de passe faux.":/confirm/i.test(m)?"Compte pas encore activé. Écrivez-nous sur WhatsApp.":/fetch|network/i.test(m)?"Pas de connexion internet.":m}}
+async function openAccount(nom,ph){
+  const c=readCache();
+  if(c&&c.uid===USER.id){S=c.S;snap=c.snap||{};lastPull=c.lastPull||EPOCH;AB=c.AB||null;migrate()}
+  else{S=emptyS();migrate();snap={"set|main":JSON.stringify(rowsOf()["set|main"])};lastPull=EPOCH;AB=null}
+  try{await pull(true)}catch(e){}
+  if(nom&&!S.set.nom){S.set.nom=nom;S.set.tels=nice(ph);S.set.wave=nice(ph);S.set.om=nice(ph);S.set.slug=nom.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,30)}
+  await fetchAb();MODE="app";tab="voyages";$("full").hidden=true;
+  if(!S.set.lieux.length)tab="reglages";
+  save();render();checkReq();startLoops();
+  if(pinGet())lockScreen("enter")}
+function startDemo(){DEMO=true;MODE="app";try{const r=localStorage.getItem(KEY_D);S=r?JSON.parse(r):null}catch(e){S=null}if(!S)S=seed();migrate();REQ=S.demoReq||[];
+  $("full").hidden=true;tab="voyages";writeCache();render()}
+function showBlocked(a){$("app").innerHTML="";$("full-body").innerHTML=`<div class="logo">${LOGO}<b>Teranga<span>Navette</span></b></div>
+  <div class="banner bad"><div><b>Votre abonnement est fini depuis le ${fdate(a.end)}.</b><br>Vos données sont gardées. Votre page de réservation est fermée.</div></div>
+  <div class="card"><p class="note" style="font-size:1.05rem">Payez <b>${fcfa(abPrix())}</b> (formule ${F().nom}) par Wave ou Orange Money au <b>${esc(CFG.paiement)}</b>, puis envoyez la capture sur WhatsApp. L'app se rouvre dès que le paiement est noté.</p>
+  <a class="btn green full" href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, j'ai payé mon abonnement Teranga Navette. Mon numéro : "+nice(USER.email.split("@")[0]))}" target="_blank" rel="noopener">Envoyer sur WhatsApp</a>
+  <button class="btn full" id="b-re">J'ai payé : vérifier</button><button class="btn danger full" id="b-out">Se déconnecter</button></div>`;
+  $("full").hidden=false;$("b-re").onclick=async()=>{await fetchAb();if(abState().st!=="blocked"){$("full").hidden=true;render()}else toast("Pas encore noté. Réessayez plus tard.")};$("b-out").onclick=()=>{$("full").hidden=true;ACT.logout()}}
+let loops=false;
+function startLoops(){if(loops)return;loops=true;
+  setInterval(()=>{if(!document.hidden&&MODE==="app"&&!DEMO){checkReq();sync(false)}},30000);
+  setInterval(()=>{if(!document.hidden&&MODE==="app"&&!DEMO)fetchAb().then(()=>{if(abState().st==="blocked")render()})},30*60e3);
+  setInterval(()=>{if(!document.hidden&&MODE==="app"&&!DEMO&&S.set.slug)publish()},20*60e3)}
+
+/* =================== panneau abonnements (pour Seck Tech) =================== */
+let ADM_PW="",ADM=[];
+function showAdmin(){MODE="admin";$("full").hidden=true;
+  $("app").innerHTML=`<div class="wrap"><header class="top"><div class="brand"><h1>Abonnements <span>Teranga Navette</span></h1></div></header><div id="adm" style="margin-top:16px"></div></div>`;
+  if(!SB){$("adm").innerHTML=`<p class="empty">Base de données pas encore reliée (config.json).</p>`;return}
+  if(!ADM_PW){$("adm").innerHTML=`<div class="card"><label>Mot de passe du panneau<input id="adm-pw" type="password"></label><button class="btn dark" id="adm-go">Entrer</button><p class="note" id="adm-msg" style="color:var(--red);font-weight:700"></p></div>`;
+    $("adm-go").onclick=async()=>{ADM_PW=val("adm-pw");if(!await admLoad()){ADM_PW="";$("adm-msg").textContent="Mot de passe faux ou pas de connexion."}};return}
+  const t=today();const act=ADM.filter(a=>[a.trial_end,a.paid_until].filter(Boolean).sort().pop()>=t);
+  const mois=ADM.filter(a=>a.paid_until&&a.paid_until>=t).reduce((s,a)=>s+(a.price||FORMULES[a.formule].prix),0);
+  $("adm").innerHTML=`<div class="sum"><div><span>Inscrits</span><b>${ADM.length}</b></div><div><span>Actifs</span><b class="pos">${act.length}</b></div><div><span>Payants / mois</span><b>${fcfa(mois)}</b></div></div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="adm-re">Actualiser</button></div>
+    <div class="card" style="margin-top:12px">${ADM.length?ADM.map(a=>{const end=[a.trial_end,a.paid_until].filter(Boolean).sort().pop(),left=diffDays(t,end),trial=!a.paid_until||a.trial_end>=a.paid_until;
+      return`<div class="ab"><div class="row" style="justify-content:space-between"><b style="overflow-wrap:anywhere">${esc(a.nom||"(sans nom)")}</b><span class="pill ${left>=0?"ok":"due"}">${trial?"Essai":"Payé"} · ${left>=0?left+" j":"fini depuis "+(-left)+" j"}</span></div>
+        <div class="p-sub">${esc(nice(a.tel))} · ${FORMULES[a.formule]?FORMULES[a.formule].nom:a.formule} · ${fcfa(a.price||FORMULES[a.formule].prix)} · jusqu'au ${fdate(end)}${a.slug?" · page : "+esc(a.slug):""} · ${a.resa} résa en attente${a.derniere?" · actif le "+fdate(a.derniere.slice(0,10)):""}</div>
+        ${a.note?`<div class="p-sub">📝 ${esc(a.note)}</div>`:""}
+        <div class="row"><button class="btn small green" data-ad="pay" data-u="${a.user_id}">+1 mois payé</button><button class="btn small" data-ad="edit" data-u="${a.user_id}">Modifier</button>
+        <a class="btn small" href="https://wa.me/${waNum(a.tel)}?text=${encodeURIComponent("Salam "+(a.nom||"")+", votre abonnement Teranga Navette finit le "+fdate(end)+". Montant : "+fcfa(a.price||FORMULES[a.formule].prix)+" par Wave ou Orange Money au "+CFG.paiement+". Merci !")}" target="_blank" rel="noopener">Rappel WhatsApp</a></div></div>`}).join(""):`<p class="empty">Aucun inscrit pour le moment.</p>`}</div>`;
+  $("adm-re").onclick=async()=>{await admLoad()};
+  document.querySelectorAll("[data-ad]").forEach(b=>b.onclick=()=>{const a=ADM.find(x=>x.user_id===b.dataset.u);if(b.dataset.ad==="pay")admPay(a);else admEdit(a)})}
+async function admLoad(){try{const r=await SB.rpc("navette_admin_list",{p_pass:ADM_PW});if(r.error)throw r.error;ADM=r.data||[];showAdmin();return true}catch(e){return false}}
+async function admSet(a,o){try{const r=await SB.rpc("navette_admin_set",{p_pass:ADM_PW,p_user:a.user_id,p_formule:o.formule??a.formule,p_price:o.price===undefined?a.price:o.price,
+  p_paid_until:o.paid_until===undefined?a.paid_until:o.paid_until,p_trial_end:o.trial_end??a.trial_end,p_note:o.note??a.note});if(r.error)throw r.error;await admLoad();toast("Enregistré ✓")}catch(e){toast("Erreur : "+(e.message||e))}}
+function admPay(a){const t=today(),base=[a.trial_end,a.paid_until].filter(Boolean).sort().pop(),start=base&&base>=t?base:t;const d=new Date(start+"T12:00");d.setMonth(d.getMonth()+1);
+  if(confirm(`${a.nom} a payé 1 mois ? Fin : ${fdate(iso(d))}`))admSet(a,{paid_until:iso(d)})}
+function admEdit(a){openSheet(`<h3>${esc(a.nom||"Abonné")}</h3><div class="card">
+  <label>Formule<select id="ad-f">${Object.entries(FORMULES).map(([k,f])=>`<option value="${k}"${a.formule===k?" selected":""}>${f.nom} (${fcfa(f.prix)})</option>`).join("")}</select></label>
+  <label>Prix spécial par mois (vide = prix de la formule)<input id="ad-p" type="number" inputmode="numeric" value="${a.price??""}"></label>
+  <div class="grid2"><label>Payé jusqu'au<input id="ad-pu" type="date" value="${a.paid_until||""}"></label><label>Fin de l'essai<input id="ad-te" type="date" value="${a.trial_end||""}"></label></div>
+  <label>Note<input id="ad-n" value="${esc(a.note||"")}"></label>
+  <div class="row"><button class="btn primary" id="ad-ok">Enregistrer</button><button class="btn" data-a="close">Annuler</button></div></div>`);
+  $("ad-ok").onclick=()=>{$("sheet").hidden=true;admSet(a,{formule:val("ad-f"),price:val("ad-p")===""?null:+val("ad-p"),paid_until:val("ad-pu")||null,trial_end:val("ad-te")||a.trial_end,note:val("ad-n")})}}
+
+/* =================== démarrage =================== */
+async function boot(){
+  try{const r=await fetch("config.json?t="+Date.now(),{cache:"no-store"});if(r.ok){const c=await r.json();
+    for(const k of ["supabase_url","supabase_key","nom","paiement"])if(c[k])CFG[k]=String(c[k]).trim();
+    const w=String(c.whatsapp||"").replace(/\D/g,"");if(w.length>=9)CFG.whatsapp=w.length===9?"221"+w:w}}catch(e){}
+  try{if(CFG.supabase_url&&CFG.supabase_key&&window.supabase)SB=supabase.createClient(CFG.supabase_url,CFG.supabase_key,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"terangaNavette_auth"}})}catch(e){SB=null}
+  if(/[?&#]admin/.test(location.href)){showAdmin();return}
+  if(SB){try{const{data}=await SB.auth.getSession();USER=data&&data.session?data.session.user:null}catch(e){USER=null}
+    if(!USER){const c=readCache();if(c&&c.uid&&navigator.onLine===false){USER={id:c.uid,email:""}}}
+    if(USER){await openAccount("","");return}}
+  try{if(localStorage.getItem(KEY_D)){startDemo();return}}catch(e){}
+  showAuth(SB?"signup":"login")}
+boot();
+</script>
+</body>
+</html>

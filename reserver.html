@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6b4a">
+<title>Réserver ma place</title>
+<meta name="description" content="Réservez votre place en 1 minute. On vient vous chercher.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Réservez votre place en 1 minute">
+<meta property="og:description" content="Choisissez le trajet, l'heure et l'endroit où on vous prend. Paiement Wave, Orange Money ou espèces.">
+<meta property="og:image" content="https://seckappssn-maker.github.io/teranga-navette/copertina-reserver.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Figtree:wght@500;600;700;800&display=swap">
+<style>
+/* Une colonne large comme le téléphone, on descend étape par étape avec de grands boutons ; le prix et le bouton Réserver restent en bas. */
+:root{--bg:#f3f5f1;--surface:#fff;--ink:#14261f;--muted:#56675f;--line:#d3dcd5;--accent:#e8a317;--accent-soft:#fdf1d6;--green:#0f6b4a;--wa:#128c4a;--red:#c0362c;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"Figtree",system-ui,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1714;--surface:#17221d;--ink:#e8efe9;--muted:#9db0a6;--line:#2e4037;--accent:#f0b43a;--accent-soft:#3a2f14;--green:#4fc493;--wa:#1f9d57;--red:#f2786f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1714;--surface:#17221d;--ink:#e8efe9;--muted:#9db0a6;--line:#2e4037;--accent:#f0b43a;--accent-soft:#3a2f14;--green:#4fc493;--wa:#1f9d57;--red:#f2786f;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;-webkit-text-size-adjust:100%}
+.wrap{max-width:480px;margin:0 auto;padding-inline:16px;padding-block:calc(18px + env(safe-area-inset-top,0px)) 140px;display:grid;gap:26px}
+.wrap>*{min-width:0}
+h1{font-family:var(--display);font-weight:800;font-size:1.75rem;margin:0;line-height:1.1;overflow-wrap:anywhere}
+h1 span{color:var(--accent);display:block;font-size:1.05rem;margin-top:4px}
+.sub{color:var(--muted);margin:6px 0 0;font-size:1.02rem}
+.step h2{display:flex;align-items:center;gap:10px;font:800 1.18rem var(--body);margin:0 0 12px}
+.step h2 b{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font:800 1rem var(--display)}
+.step.done h2 b{background:var(--green)}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.big{min-height:66px;min-width:0;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:16px;padding:10px 6px;font:800 1.05rem var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;overflow-wrap:break-word}
+#days .big{font-size:.95rem;padding:10px 3px}
+.big .e{font-size:1.6rem;line-height:1}
+.pm{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font:800 .8rem var(--body)}
+.big small{font:700 .85rem var(--body);color:var(--muted)}
+.big[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent) inset}
+.big:disabled{opacity:.35}
+input{font:600 1.1rem var(--body);width:100%;min-width:0;max-width:100%;padding:16px;border:2px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink)}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-height:58px;text-align:left}
+.action{margin-top:10px;width:100%;border:0;border-radius:14px;padding:16px;font:800 1.05rem var(--body);cursor:pointer;background:var(--green);color:#fff}
+.action.sec{background:var(--surface);color:var(--ink);border:2px solid var(--line)}
+.action.ok{background:var(--surface);color:var(--green);border:2px solid var(--green)}
+.hint{font-size:.95rem;color:var(--muted);margin:8px 0 0}
+.or{text-align:center;color:var(--muted);font-size:.9rem;font-weight:800;margin:10px 0 0}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tel{text-align:center;color:var(--muted);font-size:1rem;margin:0}
+.tel a{color:var(--ink);font-weight:800}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));z-index:10}
+.bar-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.price{font-family:var(--display);font-weight:800;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1}
+.price small{display:block;font:800 .75rem var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.wa{display:flex;justify-content:center;align-items:center;background:var(--wa);color:#fff;text-decoration:none;font:800 1.08rem var(--body);padding:17px 10px;border-radius:14px;border:0;cursor:pointer;width:100%}
+.wa:disabled{opacity:.6}
+.err{color:var(--red);font-weight:800;font-size:.98rem;grid-column:1/-1;margin:0;text-align:center}
+.msgbox{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:10px;text-align:center}
+.demo{background:var(--accent-soft);border:2px solid var(--accent);border-radius:14px;padding:10px 12px;font-size:.95rem;font-weight:700}
+.mapwin{position:fixed;inset:0;background:var(--bg);z-index:30;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.mapwin header{padding:12px 16px;font:800 1.1rem var(--body);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.close{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 14px;font:800 .95rem var(--body);cursor:pointer}
+#map{flex:1;position:relative;overflow:hidden;background:var(--surface)}
+.mapwin footer{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.mapwin footer .action:disabled{opacity:.4}
+.dot{width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-tile-container,.leaflet-map-pane svg,.leaflet-zoom-box{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:none}
+.leaflet-tile,.leaflet-marker-icon{user-select:none;-webkit-user-drag:none}
+.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}
+.leaflet-container img.leaflet-tile{max-width:none!important;max-height:none!important;width:256px;height:256px}
+.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-marker-pane{z-index:600}
+.leaflet-control-container .leaflet-top,.leaflet-control-container .leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}
+.leaflet-top{top:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-right{right:0}
+.leaflet-control{position:relative;z-index:800;pointer-events:auto;float:left;clear:both}
+.leaflet-top .leaflet-control{margin-top:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:6px;float:right}.leaflet-bottom .leaflet-control{margin-bottom:4px}
+.leaflet-bar{border-radius:8px;box-shadow:0 1px 5px rgba(0,0,0,.35);overflow:hidden}
+.leaflet-bar a{display:block;width:42px;height:42px;text-align:center;background:#fff;color:#222;text-decoration:none;font:700 22px/42px sans-serif;border-bottom:1px solid #ccc}
+.leaflet-control-attribution{background:rgba(255,255,255,.8);font-size:10px;padding:0 4px;color:#333}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-zoom-animated{transform-origin:0 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div><h1 id="titre">Réservation<span>Navette</span></h1><p class="sub">Réservez en 1 minute. On vient vous chercher.</p></div>
+  <div class="msgbox" id="loading"><b>Chargement…</b></div>
+  <div id="form" hidden style="display:grid;gap:26px">
+    <div class="demo" id="demo" hidden>Page d'exemple : rien n'est envoyé.</div>
+    <section class="step" id="s1"><h2><b>1</b>Vous partez d'où ?</h2><div class="grid g2" id="from"></div></section>
+    <section class="step" id="s2"><h2><b>2</b>Vous allez où ?</h2><div class="grid g2" id="to"></div></section>
+    <section class="step" id="s3"><h2><b>3</b>Quel jour ?</h2><div class="grid g3" id="days"></div>
+      <input type="date" id="date" aria-label="Choisir le jour" style="margin-top:10px" hidden></section>
+    <section class="step" id="s4"><h2><b>4</b>À quelle heure ?</h2><div class="grid g2" id="hours"></div>
+      <input type="time" id="heure-libre" aria-label="Heure" hidden><p class="hint" id="hour-hint"></p></section>
+    <section class="step" id="s5"><h2><b>5</b>Combien de places ?</h2><div class="grid g4" id="seats"></div></section>
+    <section class="step" id="s5p"><h2><b>6</b>Comment vous payez ?</h2><div class="grid g3" id="pay"></div><p class="hint">Vous payez le jour du voyage.</p></section>
+    <section class="step" id="s6"><h2><b>7</b>Votre nom et numéro</h2>
+      <div class="grid"><input id="nom" autocomplete="name" placeholder="Votre prénom et nom"><input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Votre numéro, ex. 77 123 45 67"></div></section>
+    <section class="step" id="s7"><h2><b>8</b><span id="s7-t">On vous prend où ?</span></h2>
+      <div id="pick"><button type="button" class="action" id="gps">📍 Je suis ici, prenez-moi ici</button><button type="button" class="action sec" id="map-R">🗺 Choisir sur la carte</button><p class="or">ou écrivez le quartier</p></div>
+      <input id="lieu" placeholder="Quartier, repère…" style="margin-top:10px"><p class="hint" id="hint-R"></p></section>
+    <section class="step" id="s8"><h2><b>9</b>On vous dépose où ?</h2>
+      <input id="dep" placeholder="Quartier, repère…"><button type="button" class="action sec" id="map-A">🗺 Choisir sur la carte</button><p class="hint" id="hint-A"></p></section>
+    <p class="tel" id="contact"></p>
+  </div>
+</div>
+
+<div class="bar" id="bar" hidden><div class="bar-in"><div class="price"><small>Prix</small><span id="prix">—</span></div>
+  <button type="button" class="wa" id="send">Réserver</button><p class="err" id="err" hidden></p></div></div>
+
+<div class="mapwin" id="okwin" hidden style="overflow-y:auto">
+  <div style="margin:0 auto;max-width:440px;width:100%;padding:20px 16px calc(24px + env(safe-area-inset-bottom,0px));display:grid;gap:12px;text-align:center">
+    <div style="font-size:2.6rem;line-height:1" id="ok-ico">✅</div>
+    <h1 id="ok-title" style="font-size:1.5rem">Réservation envoyée</h1>
+    <p class="sub" id="ok-text" style="margin:0">Nous vous appelons pour confirmer.</p>
+    <div id="recu-box" hidden style="display:grid;gap:10px">
+      <img id="recu-img" alt="Votre reçu de réservation" style="width:100%;border-radius:14px;border:1px solid var(--line)">
+      <p class="hint" style="margin:0">📷 Appuyez longtemps sur le reçu puis « Enregistrer » pour le garder dans vos photos.</p>
+      <button type="button" class="action sec" id="recu-share">Partager / garder le lien du reçu</button><p class="hint" id="recu-note" style="margin:0"></p></div>
+    <a class="wa" id="wa" href="#" target="_blank" rel="noopener">Envoyer aussi sur WhatsApp</a>
+    <button type="button" class="action sec" id="ok-close">Retour</button>
+  </div>
+</div>
+
+<div class="mapwin" id="mapwin" hidden>
+  <header><span id="map-title">Touchez où on vous prend</span><button type="button" class="close" id="map-close">Fermer</button></header>
+  <div id="map" role="application" aria-label="Carte"></div>
+  <footer><p class="hint" id="map-hint" style="margin:0 0 8px">Touchez la carte pour mettre le point.</p><button type="button" class="action" id="map-ok" disabled>Valider ce point</button></footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+const f=n=>Math.round(n||0).toLocaleString("fr-FR").replace(/[  ]/g," ")+" F";
+const isoDay=n=>{const d=new Date();d.setDate(d.getDate()+n);return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const phoneDigits=t=>{let d=String(t||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);if(d.length===9)d="221"+d;return d};
+const Q=new URLSearchParams(location.search), SLUG=(Q.get("c")||"").toLowerCase().trim();
+const mapOK=!!window.L;
+let D=null, SB=null, DEMO=false;
+let st={from:null,to:null,day:1,h:null,s:1,pay:null,R:null,A:null,ref:null};
+const PAY={cash:{n:"Espèces",i:'<span class="e">💵</span>'},wave:{n:"Wave",i:'<span class="pm" style="background:#1d8fe0">W</span>'},om:{n:"Orange Money",i:'<span class="pm" style="background:#f07c00">OM</span>'}};
+const EMO=l=>l.aero?"✈️":/touba/i.test(l.n)?"🕌":/dakar/i.test(l.n)?"🏙️":"📍";
+function exemple(){const t=isoDay(0),d=isoDay(1);return{nom:"Car Touba (exemple)",tels:"77 000 00 00",
+  lieux:[{id:"touba",n:"Touba",lat:14.861,lng:-15.877},{id:"dakar",n:"Dakar",lat:14.6928,lng:-17.4467},{id:"aibd",n:"Aéroport AIBD",lat:14.6739,lng:-17.0733,aero:1}],
+  trajets:[{a:"dakar",b:"touba",place:6000,voiture:22000},{a:"aibd",b:"touba",place:8000,voiture:30000},{a:"aibd",b:"dakar",place:5000,voiture:18000}],
+  fisse:[{r:"touba>dakar",o:"07:00",f:4},{r:"dakar>touba",o:"17:00",f:4}],viaggi:[{r:"touba>dakar",d:t,o:"07:00",f:0,cap:4},{r:"touba>dakar",d,o:"07:00",f:2,cap:4}]}}
+
+const L_=id=>(D.lieux.find(x=>x.id===id)||{n:id});
+const trajet=(a,b)=>D.trajets.find(t=>(t.a===a&&t.b===b)||(t.a===b&&t.b===a));
+const routeKey=()=>st.from&&st.to?st.from+">"+st.to:null;
+const fromAir=()=>st.from&&L_(st.from).aero, toAir=()=>st.to&&L_(st.to).aero;
+const froms=()=>D.lieux.filter(l=>D.trajets.some(t=>t.a===l.id||t.b===l.id));
+const tos=a=>D.lieux.filter(l=>l.id!==a&&trajet(a,l.id));
+function big(html,on,cb,dis){const b=document.createElement("button");b.type="button";b.className="big";b.setAttribute("aria-pressed",!!on);b.innerHTML=html;b.onclick=cb;if(dis)b.disabled=true;return b}
+const dayIso=()=>st.day==="x"?$("date").value:isoDay(st.day);
+// heures possibles avec places libres (par véhicule)
+function slots(){const rk=routeKey();if(!rk)return null;const d=dayIso(),m=new Map();
+  for(const x of D.fisse||[])if(x.r===rk)m.set(x.o,{ora:x.o,max:x.f,empty:x.f,fixed:true,trips:false});
+  for(const t of D.viaggi||[])if(t.r===rk&&t.d===d){let s=m.get(t.o);if(!s||!s.trips){const fx=s&&s.fixed;s={ora:t.o,max:0,empty:0,fixed:fx,trips:true};m.set(t.o,s)}
+    s.max=Math.max(s.max,t.f);if(t.f===t.cap)s.empty=Math.max(s.empty,t.cap)}
+  for(const s of m.values())if(!s.fixed&&s.trips){}
+  if(!m.size)return null;let list=[...m.values()].sort((a,b)=>a.ora.localeCompare(b.ora));
+  if(d===isoDay(0)){const n=new Date(),now=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");list=list.filter(x=>x.ora>now)}
+  return list}
+const hour=()=>slots()?st.h:$("heure-libre").value;
+function curSlot(){const hs=slots();return hs&&st.h?hs.find(x=>x.ora===st.h):null}
+function draw(){
+  $("from").replaceChildren(...froms().map(l=>big(`<span class="e">${EMO(l)}</span>${esc(l.n)}`,st.from===l.id,()=>{st.from=l.id;if(st.to===l.id||!trajet(l.id,st.to))st.to=null;st.R=null;st.A=null;st.h=null;draw()})));
+  const ts=st.from?tos(st.from):[];
+  $("to").replaceChildren(...ts.map(l=>{const t=trajet(st.from,l.id);return big(`<span class="e">${EMO(l)}</span>${esc(l.n)}${t&&t.place?`<small>dès ${f(t.place)}</small>`:""}`,st.to===l.id,()=>{st.to=l.id;st.A=null;st.h=null;draw()})}));
+  if(!st.from)$("to").innerHTML='<p class="hint" style="grid-column:1/-1;margin:0">Choisissez d\'abord le départ.</p>';
+  $("days").replaceChildren(...[["Aujourd'hui",0],["Demain",1],["Autre jour","x"]].map(([t,n])=>big(t,st.day===n,()=>{st.day=n;st.h=null;draw()})));
+  $("date").hidden=st.day!=="x";
+  const hs=slots();if(hs&&st.h&&!hs.some(x=>x.ora===st.h&&x.max>0))st.h=null;
+  $("hours").replaceChildren(...(hs||[]).map(x=>big(`${x.ora}<small>${x.max>0?x.max+" place"+(x.max>1?"s":"")+" libre"+(x.max>1?"s":""):"Complet"}</small>`,st.h===x.ora,()=>{st.h=x.ora;draw()},x.max<=0)));
+  $("hours").hidden=!hs;$("heure-libre").hidden=!!hs||!routeKey();
+  $("hour-hint").textContent=!routeKey()?"Choisissez d'abord le trajet.":hs?(hs.every(x=>x.max<=0)?"Tout est complet ce jour-là. Choisissez un autre jour.":"Départs à heure fixe."):(fromAir()?"Mettez l'heure d'arrivée de votre avion.":"Choisissez l'heure qui vous arrange.");
+  const sl=curSlot(),max=sl?sl.max:99,empty=sl?sl.empty:99;
+  if(st.s==="V"?!empty:st.s>max)st.s=max>=1?1:null;
+  $("seats").replaceChildren(...[1,2,3,"V"].map(n=>big(n==="V"?`<span class="e">🚗</span><small>Toute la voiture</small>`:`<span class="e">${n}</span><small>place${n>1?"s":""}</small>`,st.s===n,()=>{st.s=n;draw()},n==="V"?!empty:n>max)));
+  $("pay").replaceChildren(...Object.entries(PAY).map(([k,p])=>big(`${p.i}${p.n}`,st.pay===k,()=>{st.pay=k;draw()})));
+  $("s7-t").textContent=fromAir()?"Votre vol":"On vous prend où ?";$("pick").hidden=!!fromAir();
+  $("map-R").hidden=!mapOK;$("map-A").hidden=!mapOK;
+  $("lieu").placeholder=fromAir()?"Numéro de vol et heure, ex. AF718 09:40":"Quartier, repère…";$("s8").hidden=!!toAir();
+  [...document.querySelectorAll(".step")].filter(s=>!s.hidden).forEach((s,i)=>s.querySelector("h2 b").textContent=i+1);
+  marks();upd()}
+function marks(){const g=$("gps");g.classList.toggle("ok",!!st.R);g.textContent=st.R?"✓ Position trouvée":"📍 Je suis ici, prenez-moi ici";
+  $("map-R").textContent=st.R?"🗺 Changer sur la carte":"🗺 Choisir sur la carte";$("map-A").textContent=st.A?"✓ Point choisi · changer":"🗺 Choisir sur la carte";$("map-A").classList.toggle("ok",!!st.A);
+  $("hint-R").textContent=fromAir()?"On vous attend à la sortie de l'aéroport.":"";
+  const done={s1:!!st.from,s2:!!st.to,s3:true,s4:!!hour(),s5:!!st.s,s5p:!!st.pay,s6:!!$("nom").value.trim(),s7:fromAir()?!!$("lieu").value.trim():(!!st.R||!!$("lieu").value.trim()),s8:!!st.A||!!$("dep").value.trim()};
+  Object.entries(done).forEach(([k,v])=>$(k).classList.toggle("done",v))}
+
+/* GPS et carte */
+$("gps").onclick=()=>{if(!navigator.geolocation){$("hint-R").textContent="Votre téléphone ne donne pas la position. Écrivez le quartier.";return}
+  $("gps").textContent="Recherche de votre position…";
+  navigator.geolocation.getCurrentPosition(p=>{st.R={lat:+p.coords.latitude.toFixed(5),lng:+p.coords.longitude.toFixed(5)};marks();upd()},
+    ()=>{marks();$("hint-R").textContent="La position n'a pas marché. Écrivez votre quartier"+(mapOK?" ou utilisez la carte.":".")},{enableHighAccuracy:true,timeout:15000})};
+let map=null,pin=null,which="R",tmp=null,tileErr=0;
+function cityPt(id){const l=L_(id);if(l.lat)return[l.lat,l.lng];const w=D.lieux.find(x=>x.lat);return w?[w.lat,w.lng]:[14.6928,-17.4467]}
+function openMap(w){which=w;tmp=st[w];$("mapwin").hidden=false;document.body.style.overflow="hidden";
+  $("map-title").textContent=w==="R"?"Touchez où on vous prend":"Touchez où on vous dépose";
+  const c=tmp?[tmp.lat,tmp.lng]:cityPt(w==="R"?st.from:st.to);
+  if(!map){map=L.map("map").setView(c,13);const t=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
+    t.on("tileerror",()=>{if(++tileErr===3)$("map-hint").textContent="La carte ne se charge pas. Fermez et écrivez le quartier."});map.on("click",e=>setTmp(e.latlng.lat,e.latlng.lng))}
+  setTimeout(()=>{map.invalidateSize();map.setView(c,tmp?16:13)},50);if(pin){map.removeLayer(pin);pin=null}if(tmp)setTmp(tmp.lat,tmp.lng);$("map-ok").disabled=!tmp}
+function setTmp(lat,lng){tmp={lat:+lat.toFixed(5),lng:+lng.toFixed(5)};const col=getComputedStyle(document.documentElement).getPropertyValue(which==="R"?"--green":"--accent").trim();
+  const ic=L.divIcon({className:"",html:`<div class="dot" style="background:${col}"></div>`,iconSize:[26,26],iconAnchor:[13,13]});
+  if(pin)pin.setLatLng([lat,lng]).setIcon(ic);else pin=L.marker([lat,lng],{icon:ic}).addTo(map);$("map-ok").disabled=false}
+function closeMap(){$("mapwin").hidden=true;document.body.style.overflow=""}
+$("map-close").onclick=closeMap;$("map-ok").onclick=()=>{st[which]=tmp;closeMap();marks();upd()};
+$("map-R").onclick=()=>{if(st.from)openMap("R");else{$("err").hidden=false;$("err").textContent="Choisissez d'abord le départ."}};
+$("map-A").onclick=()=>{if(st.to)openMap("A");else{$("err").hidden=false;$("err").textContent="Choisissez d'abord la destination."}};
+
+/* prix et message */
+function price(){if(!routeKey()||!st.s)return null;const t=trajet(st.from,st.to);if(!t)return null;return st.s==="V"?t.voiture:t.place*st.s}
+const gm=p=>`https://maps.google.com/?q=${p.lat},${p.lng}`;
+const tel1=()=>phoneDigits(String(D.tels||"").split(/[,;/]/)[0]);
+function upd(){const pr=price();$("prix").textContent=pr==null||!pr?"—":f(pr);if(!routeKey()){$("wa").href="#";return}
+  const dt=new Date(dayIso()+"T12:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+  let m=`Salam, je veux réserver :\n${st.ref?"• N° "+st.ref+"\n":""}• Trajet : ${L_(st.from).n} → ${L_(st.to).n}\n• Date : ${dt}\n• Heure : ${hour()||"à convenir"}\n• Places : ${st.s==="V"?"voiture entière":st.s}\n• Paiement : ${st.pay?PAY[st.pay].n:"-"}\n• Nom : ${$("nom").value||"-"}\n• Tél : ${$("tel").value||"-"}\n`;
+  if(fromAir())m+=`• Vol : ${$("lieu").value||"-"}\n`;else{m+=`• Prise en charge : ${$("lieu").value||"-"}\n`;if(st.R)m+=`📍 ${gm(st.R)}\n`}
+  if(!toAir()){m+=`• Dépôt : ${$("dep").value||"-"}\n`;if(st.A)m+=`🏁 ${gm(st.A)}\n`}
+  if(pr)m+=`• Prix : ${f(pr)}CFA`;
+  $("wa").href=tel1()?`https://wa.me/${tel1()}?text=${encodeURIComponent(m)}`:"#"}
+function data(){return{v:1,route:routeKey(),data:dayIso(),ora:hour()||"",ref:st.ref,posti:st.s,pay:st.pay,nome:$("nom").value.trim().slice(0,60),tel:$("tel").value.trim().slice(0,30),
+  ritiro:$("lieu").value.trim().slice(0,120),posR:st.R,arrivo:toAir()?"":$("dep").value.trim().slice(0,120),posA:st.A,prezzo:price()}}
+["date","heure-libre","nom","tel","lieu","dep"].forEach(id=>["input","change"].forEach(ev=>$(id).addEventListener(ev,()=>{if(id==="date"){st.h=null;draw()}else{marks();upd()}})));
+$("send").addEventListener("click",async()=>{let m="",go=null;
+  if(!st.from){m="Choisissez d'où vous partez.";go="s1"}else if(!st.to){m="Choisissez où vous allez.";go="s2"}
+  else if(st.day==="x"&&!$("date").value){m="Choisissez le jour.";go="s3"}
+  else if(!hour()){m="Choisissez l'heure.";go="s4"}else if(!st.s){m="Ce départ est complet. Choisissez une autre heure.";go="s4"}
+  else if(!st.pay){m="Choisissez comment vous payez.";go="s5p"}else if(!$("nom").value.trim()){m="Écrivez votre nom.";go="s6"}
+  else if($("tel").value.replace(/\D/g,"").length<9){m="Écrivez votre numéro de téléphone.";go="s6"}
+  else if(fromAir()&&!$("lieu").value.trim()){m="Écrivez votre numéro de vol.";go="s7"}
+  else if(!fromAir()&&!st.R&&!$("lieu").value.trim()){m="Dites-nous où vous prendre.";go="s7"}
+  if(m){$("err").hidden=false;$("err").textContent=m;$(go).scrollIntoView({behavior:"smooth",block:"center"});return}
+  $("err").hidden=true;st.ref=newRef();upd();const b=$("send");b.disabled=true;b.textContent="Envoi…";let ok=false;
+  if(DEMO){ok=true}else try{const r=await SB.rpc("navette_reserver",{p_slug:SLUG,p_data:data()});ok=!r.error;
+    if(ok&&D.ntfy)fetch("https://ntfy.sh/"+encodeURIComponent(D.ntfy),{method:"POST",headers:{Title:"Nouvelle reservation",Tags:"car"},body:"Nouvelle réservation : ouvrez Teranga Navette."}).catch(()=>{})}catch(e){ok=false}
+  b.disabled=false;b.textContent="Réserver";
+  $("ok-ico").textContent=ok?"✅":"📲";$("ok-title").textContent=ok?"Réservation envoyée":"Envoyez sur WhatsApp";
+  $("ok-text").textContent=ok?(DEMO?"Exemple : dans la vraie page, le transporteur reçoit la réservation tout de suite.":"Nous vous appelons pour confirmer."):"L'envoi n'a pas marché. Touchez le bouton vert pour réserver par WhatsApp.";
+  $("wa").textContent=ok?"Envoyer aussi sur WhatsApp":"Réserver sur WhatsApp";$("wa").hidden=!tel1();
+  if(ok)showRecu(recuData(),false);else $("recu-box").hidden=true;$("okwin").hidden=false});
+$("ok-close").onclick=()=>{$("okwin").hidden=true;if(Q.get("recu"))history.replaceState(null,"",location.pathname+"?c="+encodeURIComponent(SLUG))};
+
+/* reçu */
+function newRef(){const d=new Date(),p=n=>String(n).padStart(2,"0");return"NV"+p(d.getDate())+p(d.getMonth()+1)+"-"+Math.floor(1000+Math.random()*9000)}
+function recuData(){const x=data();return{ref:x.ref,route:x.route,data:x.data,ora:x.ora,posti:x.posti,nome:x.nome,ritiro:x.ritiro,arrivo:x.arrivo,pay:x.pay,prezzo:x.prezzo}}
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/")))));
+const recuUrl=(r,ok)=>location.href.split(/[?#]/)[0]+"?c="+encodeURIComponent(SLUG)+"&recu="+enc(r)+(ok?"&ok=1":"");
+function drawRecu(r,ok){const W=640,c=document.createElement("canvas"),x=c.getContext("2d");const [a,b]=(r.route||"-").split(">");
+  const nm=id=>D?L_(id).n:id, aero=id=>D&&L_(id).aero;
+  const dt=r.data?new Date(r.data+"T12:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"-";
+  const rows=[["Trajet",nm(a)+" → "+nm(b)],["Date",dt],["Heure",r.ora||"à convenir"],["Places",r.posti==="V"?"Voiture entière":String(r.posti)],["Nom",r.nome||"-"],[aero(a)?"Vol":"Prise en charge",r.ritiro||"Position GPS"]];
+  if(!aero(b))rows.push(["Dépôt",r.arrivo||"-"]);rows.push(["Paiement",(PAY[r.pay]||{}).n||"-"]);
+  const H=300+rows.length*58+170;c.width=W*2;c.height=H*2;x.scale(2,2);
+  x.fillStyle="#ffffff";x.fillRect(0,0,W,H);x.fillStyle="#0f6b4a";x.fillRect(0,0,W,120);
+  let nmS=(D&&D.nom)||"Navette";x.fillStyle="#ffffff";x.font="800 34px 'Bricolage Grotesque',sans-serif";while(x.measureText(nmS).width>W-64&&nmS.length>3)nmS=nmS.slice(0,-2);x.fillText(nmS,32,62);
+  x.fillStyle="#f5c451";x.font="700 20px Figtree,sans-serif";x.fillText("Navette · reçu de réservation",32,96);
+  x.fillStyle="#14261f";x.font="800 26px Figtree,sans-serif";x.fillText("Reçu de réservation",32,170);
+  x.fillStyle="#56675f";x.font="700 20px Figtree,sans-serif";x.fillText("N° "+(r.ref||"-"),32,202);
+  const s=ok?["CONFIRMÉE ✓","#0f6b4a","#dff0e7"]:["EN ATTENTE DE CONFIRMATION","#b4540c","#fbeadb"];x.font="800 16px Figtree,sans-serif";const tw=x.measureText(s[0]).width+28;
+  x.fillStyle=s[2];x.beginPath();x.roundRect?x.roundRect(32,222,tw,36,18):x.rect(32,222,tw,36);x.fill();x.fillStyle=s[1];x.fillText(s[0],46,246);
+  let y=300;for(const [k,v] of rows){x.fillStyle="#56675f";x.font="600 18px Figtree,sans-serif";x.fillText(k,32,y);x.fillStyle="#14261f";x.font="700 20px Figtree,sans-serif";
+    let t=String(v);while(x.measureText(t).width>380&&t.length>3)t=t.slice(0,-2);if(t!==String(v))t+="…";x.textAlign="right";x.fillText(t,W-32,y);x.textAlign="left";
+    x.strokeStyle="#dbe2dc";x.setLineDash([4,5]);x.beginPath();x.moveTo(32,y+20);x.lineTo(W-32,y+20);x.stroke();x.setLineDash([]);y+=58}
+  y+=20;x.fillStyle="#14261f";x.font="800 22px Figtree,sans-serif";x.fillText("Prix",32,y);x.textAlign="right";x.font="800 36px 'Bricolage Grotesque',sans-serif";
+  x.fillText(r.prezzo?f(+r.prezzo)+"CFA":"-",W-32,y+4);x.textAlign="left";
+  if(D&&D.tels){x.fillStyle="#56675f";x.font="600 16px Figtree,sans-serif";x.fillText("Contact : "+String(D.tels).slice(0,60),32,H-40)}
+  return c.toDataURL("image/png")}
+async function showRecu(r,ok){try{await document.fonts?.ready}catch(e){}$("recu-img").src=drawRecu(r,ok);$("recu-box").hidden=false;const url=recuUrl(r,ok);
+  $("recu-share").onclick=async()=>{try{if(navigator.share){await navigator.share({title:"Reçu "+(r.ref||""),url});return}}catch(e){if(e&&e.name==="AbortError")return}
+    try{await navigator.clipboard.writeText(url);$("recu-note").textContent="Lien du reçu copié ✓"}catch(e){$("recu-note").textContent=url}}}
+
+/* démarrage */
+function fermee(t,sub){$("loading").innerHTML=`<div style="font-size:2.4rem">🚐</div><b style="font-size:1.15rem">${t}</b>${sub?`<p class="sub" style="margin:0">${sub}</p>`:""}`;$("loading").hidden=false}
+async function boot(){
+  const r=Q.get("recu");
+  if(SLUG==="exemple"){D=exemple();DEMO=true}
+  else{let url="",key="";try{const c=await (await fetch("config.json?t="+Date.now(),{cache:"no-store"})).json();url=c.supabase_url;key=c.supabase_key}catch(e){}
+    if(!SLUG){fermee("Lien incomplet","Demandez le bon lien à votre transporteur.");return}
+    if(!url||!key||!window.supabase){fermee("Service pas encore ouvert","Réessayez plus tard.");return}
+    SB=supabase.createClient(url,key,{auth:{persistSession:false}});
+    try{const x=await SB.rpc("navette_page",{p_slug:SLUG});if(x.error)throw x.error;D=x.data}catch(e){fermee("Pas de connexion","Vérifiez internet et réessayez.");return}
+    if(!D){fermee("Page introuvable","Vérifiez le lien avec votre transporteur.");return}
+    if(D.inactif){D=null;if(!r){fermee("Réservations fermées pour le moment","Appelez directement votre transporteur.");return}}}
+  if(D){document.title="Réserver · "+(D.nom||"Navette");$("titre").innerHTML=`${esc(D.nom||"Navette")}<span>${esc(froms().map(l=>l.n).slice(0,4).join(" · "))}</span>`;
+    const tl=String(D.tels||"").split(/[,;/]/).map(t=>t.trim()).filter(Boolean);
+    $("contact").innerHTML=tl.length?"Une question ? Appelez le "+tl.map(t=>`<a href="tel:+${phoneDigits(t)}">${esc(t)}</a>`).join(" ou "):"";
+    $("demo").hidden=!DEMO;$("loading").hidden=true;$("form").hidden=false;$("bar").hidden=false;
+    if(!froms().length){$("form").hidden=true;$("bar").hidden=true;fermee("Pas encore de trajets","Le transporteur prépare sa page.")}
+    else draw()}
+  if(r){try{const x=dec(r),ok=Q.get("ok")==="1";$("ok-ico").textContent=ok?"✅":"🧾";$("ok-title").textContent=ok?"Réservation confirmée":"Votre reçu";
+    $("ok-text").textContent=ok?"À bientôt ! Soyez prêt à l'heure.":"Nous vous appelons pour confirmer.";$("wa").hidden=true;$("ok-close").textContent=D?"Faire une autre réservation":"Fermer";
+    showRecu(x,ok);$("okwin").hidden=false}catch(e){}}}
+$("date").value=isoDay(2);
+boot();
+</script>
+</body>
+</html>
