@@ -784,6 +784,7 @@ async function boot(){
   try{if(localStorage.getItem(KEY_D)){startDemo();return}}catch(e){}
   showAuth(SB?"signup":"login")}
 boot();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})});
 </script>
 </body>
 </html>
