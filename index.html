@@ -217,7 +217,11 @@ const F=()=>FORMULES[S.set.formule]||FORMULES.premium;
 /* =================== configuration (config.json) =================== */
 let CFG={supabase_url:"",supabase_key:"",whatsapp:"221778790006",paiement:"77 879 00 06",nom:"Seck Tech"};
 const MAIL_DOM="@teranganavette.app", GRACE=3, EPOCH="1970-01-01T00:00:00Z";
-const KEY_O="terangaNavette_v1", KEY_D="terangaNavette_demo", KEY_PIN="terangaNavette_pin";
+const KEY_O="terangaNavette_v1", KEY_D="terangaNavette_demo", KEY_PIN="terangaNavette_pin", KEY_ME="terangaNavette_chauffeur";
+let ME=(()=>{try{return JSON.parse(localStorage.getItem(KEY_ME)||"null")}catch(e){return null}})();
+function setME(m){ME=m;try{m?localStorage.setItem(KEY_ME,JSON.stringify(m)):localStorage.removeItem(KEY_ME)}catch(e){}}
+/* mode chauffeur : null = patron ; vehicule = chauffeur ; "bad" = code plus valable */
+function drvState(){if(!ME||!S)return null;const v=vehs().find(x=>x.id===ME.veh);if(F().chauff&&v&&v.code&&v.code===ME.code)return v;if(!S.set.codePatron){setME(null);return null}return"bad"}
 
 /* =================== données =================== */
 let S=null, SB=null, USER=null, DEMO=false, MODE="boot", AB=null, snap={}, lastPull=EPOCH, syncing=false, pushing=false, pushT=null, syncSt="";
@@ -340,7 +344,10 @@ function render(){
   if(MODE!=="app")return;
   const a=abState();
   if(a.st==="blocked"){showBlocked(a);return}
-  $("full").hidden=pinLocked?false:true;
+  const dv=drvState();
+  if(dv==="bad"){$("app").innerHTML="";if(!(padOpen&&pinMode==="out")){padForced=true;lockScreen("out","Ce code chauffeur n'est plus valable.")}return}
+  if(dv){renderDrv(dv);return}
+  $("full").hidden=!(pinLocked||padOpen);
   const nreq=REQ.length;
   $("app").innerHTML=`<div class="wrap"><header class="top"><div class="brand"><div><h1>${esc(S.set.nom||"Mon service")} <span>· Navette</span></h1></div>
     <span style="display:flex;gap:8px;align-items:center"><span class="sync" id="syncDot"></span>${pinGet()?`<button class="lockbtn" data-a="lock">🔒</button>`:""}</span></div>
@@ -358,6 +365,28 @@ function banner(a){
   if(a.st==="warn"||a.st==="grace")h+=`<div class="banner ${a.st==="grace"?"bad":""}"><div>${a.st==="grace"?`<b>Abonnement fini le ${fdate(a.end)}.</b> L'app sera bloquée dans ${GRACE+a.left} jour(s).`:a.trial?`<b>Essai gratuit :</b> encore ${a.left} jour(s), jusqu'au ${fdate(a.end)}.`:`<b>Abonnement :</b> fin dans ${a.left} jour(s), le ${fdate(a.end)}.`} Payez ${fcfa(abPrix())} par Wave ou Orange Money au <b>${esc(CFG.paiement)}</b>.</div>
     <a class="btn small green" href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, je veux payer mon abonnement Teranga Navette ("+F().nom+"). Mon numéro : "+nice(USER&&USER.email.split("@")[0]))}" target="_blank" rel="noopener">J'ai payé / écrire sur WhatsApp</a></div>`;
   return h}
+
+/* ---------- Mode chauffeur : seulement ses voyages ---------- */
+function renderDrv(ve){$("full").hidden=!(pinLocked||padOpen);
+  const list=S.viaggi.filter(t=>t.veh===ve.id&&t.data>=addDays(today(),-1)).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));
+  let h=`<div class="wrap"><header class="top"><div class="brand"><div><h1>${esc(ve.chauffeur||"Chauffeur")} <span>· ${esc(ve.nom)}</span></h1></div>
+    <span style="display:flex;gap:8px;align-items:center"><span class="sync" id="syncDot"></span><button class="btn small" data-a="drvOut">Sortir</button></span></div></header>
+    <p class="note" style="margin-top:12px">${esc(S.set.nom||"")} · mes voyages</p>`;
+  if(!list.length)h+=`<p class="empty">Aucun voyage prévu pour vous.</p>`;
+  let last="";
+  for(const v of list){
+    if(v.data!==last){h+=`<div class="day">${esc(dayName(v.data))}</div>`;last=v.data}
+    const n=occ(v),due=v.pax.reduce((s,p)=>s+Math.max(0,(+p.prezzo||0)-(+p.pagato||0)),0);
+    h+=`<article class="trip"><div class="trip-top"><div class="time">${esc(v.ora)}</div>
+      <div class="route" style="flex:1">${esc(rName(v.route))}<small>${n}/${cap(v)} places${due?" · à encaisser : "+fcfa(due):""}</small></div></div>
+      <div style="display:grid;gap:4px">${v.pax.length?v.pax.map(p=>{const d=(+p.prezzo||0)-(+p.pagato||0);
+        return`<div class="p"><div class="p-main"><div class="p-name">${esc(p.nome)} · ${p.intera?"voiture entière":p.posti+" place"+(p.posti>1?"s":"")}</div>
+          <div class="p-sub">${esc(p.tel)}${p.ritiro?" · "+esc(p.ritiro):""}${p.arrivo?" → "+esc(p.arrivo):""}</div>
+          <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">${d<=0?`<span class="pill ok">Payé</span>`:`<span class="pill due">À encaisser ${fcfa(d)}</span>`}</div></div>
+          ${p.tel?`<a class="btn small" href="tel:+${waNum(p.tel)}">Appeler</a><a class="btn small" href="https://wa.me/${waNum(p.tel)}?text=${encodeURIComponent(remind(v,p))}" target="_blank" rel="noopener">WhatsApp</a>`:""}
+          ${d>0?`<button class="btn small green" data-a="drvPaid" data-v="${v.id}|${p.id}">Encaissé</button>`:""}</div>`}).join(""):`<p class="note">Pas encore de passagers.</p>`}</div>
+      <div class="row"><button class="btn primary" data-a="itin" data-v="${v.id}" ${v.pax.length?"":"disabled"}>Itinéraire</button></div></article>`}
+  $("app").innerHTML=h+"</div>";setSync(syncSt)}
 
 /* ---------- Voyages ---------- */
 function vVoyages(){
@@ -519,9 +548,9 @@ function itinSheet(id){const v=S.viaggi.find(x=>x.id===id),r=planTrip(v),fm=F();
       :`<div class="banner"><div>Avec la formule <b>Pro</b>, l'app met les arrêts dans le bon ordre et lance la tournée complète dans Google Maps.</div></div>`}
     ${block("Qui prendre",fm.itin?r.U:byPax(r.U,v),r.upNo,r.a,"up","Lancer la tournée des départs")}
     ${block("Qui déposer",fm.itin?r.Dn:byPax(r.Dn,v),r.downNo,r.b,"down","Lancer la tournée des arrivées")}
-    ${fm.chauff?`<h2>Chauffeur</h2><div class="card"><div class="p-sub">${esc(ve.nom)}${ve.chauffeur?" · "+esc(ve.chauffeur):""}${ve.tel?" · "+esc(ve.tel):""}</div>
+    ${fm.chauff&&!ME?`<h2>Chauffeur</h2><div class="card"><div class="p-sub">${esc(ve.nom)}${ve.chauffeur?" · "+esc(ve.chauffeur):""}${ve.tel?" · "+esc(ve.tel):""}</div>
       ${ve.tel?`<a class="btn green full" href="https://wa.me/${waNum(ve.tel)}?text=${encodeURIComponent(feuille(v,r))}" target="_blank" rel="noopener">Envoyer la feuille de route au chauffeur</a>`:`<p class="note">Mettez le numéro du chauffeur dans Réglages › Véhicules.</p>`}</div>`
-      :`<p class="note" style="margin-top:16px">Formule <b>Premium</b> : feuille de route envoyée au chauffeur sur WhatsApp.</p>`}
+      :ME?"":`<p class="note" style="margin-top:16px">Formule <b>Premium</b> : feuille de route envoyée au chauffeur sur WhatsApp.</p>`}
     <button class="btn full" style="margin-top:16px" data-a="close">Fermer</button>`)}
 const byPax=(l,v)=>l.slice().sort((x,y)=>v.pax.indexOf(x.p)-v.pax.indexOf(y.p));
 function feuille(v,r){const gm=p=>p?`https://maps.google.com/?q=${p.lat},${p.lng}`:"";
@@ -587,10 +616,15 @@ function vReglages(){const s=S.set,fm=F(),a=abState(),rs=S.set.lieux;
     :`<p class="note">Choisissez au moins deux villes.</p>`}</div>`;
   // véhicules
   h+=`<h2>Véhicules${fm.veh<99?` (${vehs().length}/${fm.veh})`:""}</h2><div class="card">${vehs().map((v,i)=>`<div class="tr"><div class="grid2"><label>Nom<input data-ve="${v.id}" data-f="nom" value="${esc(v.nom)}"></label><label>Places passagers<input type="number" inputmode="numeric" min="1" max="60" data-ve="${v.id}" data-f="places" value="${v.places}"></label></div>
-    ${fm.chauff?`<div class="grid2"><label>Chauffeur<input data-ve="${v.id}" data-f="chauffeur" value="${esc(v.chauffeur||"")}"></label><label>Tél. chauffeur<input type="tel" inputmode="tel" data-ve="${v.id}" data-f="tel" value="${esc(v.tel||"")}"></label></div>`:""}
+    ${fm.chauff?`<div class="grid2"><label>Chauffeur<input data-ve="${v.id}" data-f="chauffeur" value="${esc(v.chauffeur||"")}"></label><label>Tél. chauffeur<input type="tel" inputmode="tel" data-ve="${v.id}" data-f="tel" value="${esc(v.tel||"")}"></label></div>
+    <label>Code du chauffeur (4 chiffres)<input inputmode="numeric" maxlength="4" autocomplete="off" data-ve="${v.id}" data-f="code" value="${esc(v.code||"")}" placeholder="ex. 2580"></label>`:""}
     ${i?`<button class="btn small danger" style="justify-self:start" data-a="delVeh" data-v="${v.id}">Supprimer ce véhicule</button>`:""}</div>`).join("")}
     ${vehs().length<fm.veh?`<button class="btn" data-a="addVeh">+ Ajouter un véhicule</button>`:`<p class="note">${fm.veh===1?"Formule Pro : jusqu'à 3 véhicules. Premium : sans limite.":fm.veh===3?"Formule Premium : véhicules sans limite.":""}</p>`}
-    ${fm.chauff?"":`<p class="note">Formule Premium : chauffeurs avec feuille de route sur WhatsApp.</p>`}</div>`;
+    ${fm.chauff?"":`<p class="note">Formule Premium : chauffeurs avec feuille de route sur WhatsApp et leur propre code.</p>`}</div>`;
+  if(fm.chauff)h+=`<h2>Accès chauffeurs</h2><div class="card"><p class="note">Chaque chauffeur entre avec son code et voit <b>seulement ses voyages</b> : passagers, adresses, itinéraire et argent à encaisser. Il ne voit pas les comptes, les réglages ni les réservations en ligne.</p>
+    <p class="note">${s.codePatron?"Code patron : ✓ enregistré. Il sert à sortir du mode chauffeur.":"<b>D'abord</b>, choisissez un code patron. Il sert à sortir du mode chauffeur."}</p>
+    <div class="row"><button class="btn" data-a="patSet">${s.codePatron?"Changer le code patron":"Mettre le code patron"}</button>${s.codePatron&&vehs().some(v=>v.code)?`<button class="btn dark" data-a="drvIn">Mode chauffeur sur ce téléphone</button>`:""}</div>
+    <p class="note">Sur le téléphone du chauffeur : connectez-vous une fois avec votre numéro et votre mot de passe, touchez « Mode chauffeur », puis le chauffeur entre son code.</p></div>`;
   // départs fixes
   h+=`<h2>Départs fixes chaque jour</h2><div class="card">${s.fisse.length?s.fisse.map(f=>`<div class="row" style="padding-bottom:8px;border-bottom:1px dashed var(--line)">
     <select data-fx="${f.id}" data-f="route" style="flex:1 1 100%">${routeOpts(f.route)}</select><input type="time" data-fx="${f.id}" data-f="ora" value="${f.ora}" style="flex:1 1 120px">
@@ -619,6 +653,9 @@ function bindReglages(){
   document.querySelectorAll("[data-tr]").forEach(e=>e.onchange=()=>{const k=e.dataset.tr,f=e.dataset.f;S.set.trajets[k]=S.set.trajets[k]||{on:0,place:0,voiture:0};
     S.set.trajets[k][f]=f==="on"?(e.checked?1:0):(+e.value||0);save();if(f==="on")render()});
   document.querySelectorAll("[data-ve]").forEach(e=>e.onchange=()=>{const v=vehs().find(x=>x.id===e.dataset.ve);if(!v)return;const f=e.dataset.f;
+    if(f==="code"){const c=e.value.replace(/\D/g,"");if(c&&c.length!==4){toast("Le code doit avoir 4 chiffres");e.value=v.code||"";return}
+      if(c&&vehs().some(x=>x!==v&&x.code===c)){toast("Ce code est déjà pris par un autre chauffeur");e.value=v.code||"";return}
+      v.code=c;save();render();return}
     if(f==="places"){const n=Math.max(1,Math.min(60,+e.value||4));const over=S.viaggi.some(t=>t.veh===v.id&&t.data>=today()&&occ(t)>n);if(over){toast("Des voyages ont déjà plus de passagers");e.value=v.places;return}v.places=n}else v[f]=e.value.trim();save()});
   document.querySelectorAll("[data-fx]").forEach(e=>e.onchange=()=>{const f=S.set.fisse.find(x=>x.id===e.dataset.fx);if(!f)return;f[e.dataset.f]=e.value;save()});
 }
@@ -653,36 +690,46 @@ const ACT={
   demoF:v=>{S.set.formule=v;if(vehs().length>FORMULES[v].veh)S.set.vehicules=vehs().slice(0,FORMULES[v].veh);writeCache();render()},
   quitDemo:()=>{DEMO=false;try{localStorage.removeItem(KEY_D)}catch(e){}showAuth("signup")},
   logout:async()=>{if(DEMO){DEMO=false;try{localStorage.removeItem(KEY_D)}catch(e){}showAuth("login");return}
-    try{await SB.auth.signOut()}catch(e){}try{localStorage.removeItem(KEY_O)}catch(e){}USER=null;S=null;showAuth("login")},
+    try{await SB.auth.signOut()}catch(e){}try{localStorage.removeItem(KEY_O)}catch(e){}setME(null);USER=null;S=null;showAuth("login")},
   chgPass:async()=>{const p=val("g-pw");if(p.length<6)return toast("6 caractères minimum");try{const r=await SB.auth.updateUser({password:p});if(r.error)throw r.error;toast("Mot de passe changé");$("g-pw").value=""}catch(e){toast("Pas de connexion, réessayez")}},
+  patSet:()=>lockScreen("pset1"),drvIn:()=>lockScreen("drv"),drvOut:()=>lockScreen("out"),
+  drvPaid:(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Sûr ?";return}const[t,p]=v.split("|"),dv=drvState(),tr=S.viaggi.find(x=>x.id===t);
+    if(!tr||!dv||dv==="bad"||tr.veh!==dv.id)return;const x=tr.pax.find(y=>y.id===p);if(!x)return;x.pagato=+x.prezzo||0;save();render();toast("Encaissé ✓")},
   pinSet:()=>lockScreen("set1"),pinOff:()=>{try{localStorage.removeItem(KEY_PIN)}catch(e){}render()},lock:()=>lockScreen("enter"),
 };
 async function copy(t){try{await navigator.clipboard.writeText(t);toast("Copié ✓")}catch(e){prompt("Copiez :",t)}}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||b.disabled)return;const f=ACT[b.dataset.a];if(f){e.preventDefault();f(b.dataset.v,b)}});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||b.disabled)return;const f=ACT[b.dataset.a];if(f){if(ME&&!["close","itin","drvPaid","drvOut"].includes(b.dataset.a))return;e.preventDefault();f(b.dataset.v,b)}});
 
 /* =================== code d'accès (PIN) =================== */
-let pinMode="enter",pinBuf="",pinFirst="",hiddenAt=0,pinLocked=false;
+let pinMode="enter",pinBuf="",pinFirst="",hiddenAt=0,pinLocked=false,padOpen=false,padForced=false;
 const pinGet=()=>{try{return localStorage.getItem(KEY_PIN)}catch(e){return null}};
 async function hashPin(p){const s="teranga-navette:"+p;try{const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("")}catch(e){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return"x"+h}}
-function lockScreen(mode,msg){pinMode=mode;pinBuf="";pinLocked=mode==="enter";$("sheet").hidden=true;
-  $("full-body").innerHTML=`<div class="lockwrap"><h2 style="margin:0;text-align:center">${{enter:"Code d'accès",set1:"Choisissez un code à 4 chiffres",set2:"Écrivez-le encore une fois"}[mode]}</h2>
+function lockScreen(mode,msg){pinMode=mode;pinBuf="";pinLocked=mode==="enter";padOpen=true;$("sheet").hidden=true;
+  $("full-body").innerHTML=`<div class="lockwrap"><h2 style="margin:0;text-align:center">${{enter:"Code d'accès",set1:"Choisissez un code à 4 chiffres",set2:"Écrivez-le encore une fois",pset1:"Choisissez le code patron (4 chiffres)",pset2:"Écrivez le code patron encore une fois",drv:"Code du chauffeur",out:"Code patron (ou code d'un autre chauffeur)"}[mode]}</h2>
     <div class="dots" id="dots"><span></span><span></span><span></span><span></span></div><p class="note" id="lock-msg" style="min-height:1.4em;text-align:center">${esc(msg||"")}</p>
-    <div class="pad">${["1","2","3","4","5","6","7","8","9","x","0","del"].map(k=>k==="x"?(mode==="enter"?"<span></span>":`<button class="txt" data-k="cancel">Annuler</button>`):`<button ${k==="del"?'class="txt"':""} data-k="${k}">${k==="del"?"Effacer":k}</button>`).join("")}</div>
+    <div class="pad">${["1","2","3","4","5","6","7","8","9","x","0","del"].map(k=>k==="x"?(mode==="enter"||padForced?"<span></span>":`<button class="txt" data-k="cancel">Annuler</button>`):`<button ${k==="del"?'class="txt"':""} data-k="${k}">${k==="del"?"Effacer":k}</button>`).join("")}</div>
     ${mode==="enter"?`<button class="btn small" data-k="forgot" style="margin-top:8px">Code oublié</button>`:""}</div>`;
   $("full").hidden=false}
 function drawDots(){document.querySelectorAll("#dots span").forEach((d,i)=>d.classList.toggle("on",i<pinBuf.length))}
 async function pinDone(){const p=pinBuf;
   if(pinMode==="set1"){pinFirst=p;lockScreen("set2");return}
   if(pinMode==="set2"){if(p!==pinFirst){lockScreen("set1","Les deux codes étaient différents.");return}try{localStorage.setItem(KEY_PIN,await hashPin(p))}catch(e){}unlockPin();toast("Code enregistré");return}
+  if(pinMode==="pset1"){if(vehs().some(v=>v.code===p)){lockScreen("pset1","Ce code est déjà celui d'un chauffeur.");return}pinFirst=p;lockScreen("pset2");return}
+  if(pinMode==="pset2"){if(p!==pinFirst){lockScreen("pset1","Les deux codes étaient différents.");return}S.set.codePatron=await hashPin(p);save();unlockPin();toast("Code patron enregistré");return}
+  if(pinMode==="drv"||pinMode==="out"){
+    if(pinMode==="out"&&S.set.codePatron&&await hashPin(p)===S.set.codePatron){setME(null);padForced=false;unlockPin();toast("Mode patron");return}
+    const v=F().chauff&&vehs().find(x=>x.code&&x.code===p);
+    if(v){setME({veh:v.id,code:p});padForced=false;unlockPin();toast("Bonjour "+(v.chauffeur||v.nom));return}
+    lockScreen(pinMode,"Code faux");navigator.vibrate?.(200);return}
   if(await hashPin(p)===pinGet())unlockPin();else{lockScreen("enter","Code faux");navigator.vibrate?.(200)}}
-function unlockPin(){pinLocked=false;$("full").hidden=true;$("full-body").innerHTML="";render()}
+function unlockPin(){pinLocked=false;padOpen=false;$("full").hidden=true;$("full-body").innerHTML="";render()}
 $("full").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;const k=b.dataset.k;
-  if(k==="cancel"){unlockPin();return}
+  if(k==="cancel"){if(padForced)return;unlockPin();return}
   if(k==="forgot"){if(DEMO){try{localStorage.removeItem(KEY_PIN)}catch(e){}unlockPin();return}
     if(confirm("Pour enlever le code, il faut vous reconnecter avec votre numéro et mot de passe. Continuer ?")){try{localStorage.removeItem(KEY_PIN)}catch(e){}pinLocked=false;ACT.logout()}return}
   if(k==="del"){pinBuf=pinBuf.slice(0,-1);drawDots();return}if(pinBuf.length>=4)return;pinBuf+=k;drawDots();if(pinBuf.length===4)setTimeout(pinDone,120)});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)hiddenAt=Date.now();
-  else{if(MODE==="app"&&hiddenAt&&Date.now()-hiddenAt>5*60e3&&pinGet())lockScreen("enter");if(MODE==="app"){sync(false);checkReq()}}});
+  else{if(MODE==="app"&&hiddenAt&&Date.now()-hiddenAt>5*60e3&&pinGet()&&!ME)lockScreen("enter");if(MODE==="app"){sync(false);checkReq()}}});
 
 /* =================== connexion / inscription =================== */
 const LOGO=`<svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#0f6b4a"/><path d="M12 38v-9c0-3 2-6 5-7l6-3h16c3 0 5 1 7 3l5 6c1 1 1 2 1 3v7c0 2-1 3-3 3h-2" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 41h4m12 0h10" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><circle cx="22" cy="41" r="5" fill="#e8a317"/><circle cx="44" cy="41" r="5" fill="#e8a317"/><path d="M24 22v6m10-6v6" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>`;
@@ -724,7 +771,7 @@ async function openAccount(nom,ph){
   await fetchAb();MODE="app";tab="voyages";$("full").hidden=true;
   if(!S.set.lieux.length)tab="reglages";
   save();render();checkReq();startLoops();
-  if(pinGet())lockScreen("enter")}
+  if(pinGet()&&!ME)lockScreen("enter")}
 function startDemo(){DEMO=true;MODE="app";try{const r=localStorage.getItem(KEY_D);S=r?JSON.parse(r):null}catch(e){S=null}if(!S)S=seed();migrate();REQ=S.demoReq||[];
   $("full").hidden=true;tab="voyages";writeCache();render()}
 function showBlocked(a){$("app").innerHTML="";$("full-body").innerHTML=`<div class="logo">${LOGO}<b>Teranga<span>Navette</span></b></div>
