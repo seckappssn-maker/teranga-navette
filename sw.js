@@ -70,3 +70,22 @@ self.addEventListener('fetch', e => {
     })
   );
 });
+
+// Notifications : une nouvelle commande arrive même si l'app est fermée.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Teranga Navette', {
+    body: d.body || '', tag: d.tag || 'commande', renotify: true,
+    icon: './apple-touch-icon.png', badge: './apple-touch-icon.png', data: { url: d.url || './' }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    const scope = self.registration.scope;
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const w of wins) if (w.url.startsWith(scope) && !/(menu|shop|reserver)\.html/.test(w.url)) { await w.focus(); return; }
+    await self.clients.openWindow(scope);
+  })());
+});
