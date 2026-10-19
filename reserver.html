@@ -30,6 +30,13 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font
 h1{font-family:var(--display);font-weight:800;font-size:1.75rem;margin:0;line-height:1.1;overflow-wrap:anywhere}
 h1 span{color:var(--accent);display:block;font-size:1.05rem;margin-top:4px}
 .sub{color:var(--muted);margin:6px 0 0;font-size:1.02rem}
+.head{display:flex;gap:14px;align-items:center}.head>div{min-width:0}
+.logo{width:72px;height:72px;flex-shrink:0;border-radius:18px;object-fit:contain;background:#fff;border:1px solid var(--line)}
+#vit{display:grid;gap:12px}
+.slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:18px;scrollbar-width:none}.slides::-webkit-scrollbar{display:none}
+.slides img{flex:0 0 100%;width:100%;aspect-ratio:16/10;object-fit:cover;scroll-snap-align:center;background:var(--surface)}
+.sdots{display:flex;justify-content:center;gap:6px;margin-top:-4px}.sdots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.sdots i.on{background:var(--accent)}
+.infos{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:1rem;white-space:pre-line;overflow-wrap:anywhere}
 .step h2{display:flex;align-items:center;gap:10px;font:800 1.18rem var(--body);margin:0 0 12px}
 .step h2 b{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font:800 1rem var(--display)}
 .step.done h2 b{background:var(--green)}
@@ -89,7 +96,8 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(-
 </head>
 <body>
 <div class="wrap" id="wrap">
-  <div><h1 id="titre">Réservation<span>Navette</span></h1><p class="sub">Réservez en 1 minute. On vient vous chercher.</p></div>
+  <div class="head"><img id="logo" class="logo" alt="" hidden><div><h1 id="titre">Réservation<span>Navette</span></h1><p class="sub">Réservez en 1 minute. On vient vous chercher.</p></div></div>
+  <div id="vit" hidden></div>
   <div class="msgbox" id="loading"><b>Chargement…</b></div>
   <div id="form" hidden style="display:grid;gap:26px">
     <div class="demo" id="demo" hidden>Page d'exemple : rien n'est envoyé.</div>
@@ -146,10 +154,22 @@ const phoneDigits=t=>{let d=String(t||"").replace(/\D/g,"");if(d.startsWith("00"
 const Q=new URLSearchParams(location.search), SLUG=(Q.get("c")||"").toLowerCase().trim();
 const mapOK=!!window.L;
 let D=null, SB=null, DEMO=false;
+/* logo, photos et infos du transporteur (s'il en a mis) */
+function vitrine(){const okU=u=>typeof u==="string"&&/^(https:|data:image\/)/.test(u);
+  if(okU(D.logo)){$("logo").src=D.logo;$("logo").alt="Logo "+(D.nom||"");$("logo").hidden=false}
+  const ph=(Array.isArray(D.photos)?D.photos:[]).filter(okU).slice(0,3),inf=String(D.infos||"").trim();
+  if(!ph.length&&!inf)return;
+  $("vit").innerHTML=(ph.length?`<div class="slides" id="slides">${ph.map((u,i)=>`<img src="${esc(u)}" alt="Photo ${i+1}" ${i?'loading="lazy"':""}>`).join("")}</div>`
+    +(ph.length>1?`<div class="sdots">${ph.map((u,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`:""):"")+(inf?`<div class="infos">${esc(inf)}</div>`:"");
+  $("vit").hidden=false;if(ph.length<2)return;
+  const sl=$("slides"),dots=[...document.querySelectorAll(".sdots i")];let cur=0,touched=0;
+  const mark=()=>{cur=Math.round(sl.scrollLeft/sl.clientWidth);dots.forEach((d,i)=>d.classList.toggle("on",i===cur))};
+  sl.addEventListener("scroll",()=>{clearTimeout(sl._t);sl._t=setTimeout(mark,80)});sl.addEventListener("touchstart",()=>{touched=Date.now()},{passive:true});
+  setInterval(()=>{if(document.hidden||Date.now()-touched<8000)return;sl.scrollTo({left:((cur+1)%ph.length)*sl.clientWidth,behavior:"smooth"})},4500)}
 let st={from:null,to:null,day:1,h:null,s:1,pay:null,R:null,A:null,ref:null};
 const PAY={cash:{n:"Espèces",i:'<span class="e">💵</span>'},wave:{n:"Wave",i:'<span class="pm" style="background:#1d8fe0">W</span>'},om:{n:"Orange Money",i:'<span class="pm" style="background:#f07c00">OM</span>'}};
 const EMO=l=>l.aero?"✈️":/touba/i.test(l.n)?"🕌":/dakar/i.test(l.n)?"🏙️":"📍";
-function exemple(){const t=isoDay(0),d=isoDay(1);return{nom:"Car Touba (exemple)",tels:"77 000 00 00",
+function exemple(){const t=isoDay(0),d=isoDay(1);return{nom:"Car Touba (exemple)",tels:"77 000 00 00",infos:"Départs tous les jours · Voiture climatisée · Bagages inclus",
   lieux:[{id:"touba",n:"Touba",lat:14.861,lng:-15.877},{id:"dakar",n:"Dakar",lat:14.6928,lng:-17.4467},{id:"aibd",n:"Aéroport AIBD",lat:14.6739,lng:-17.0733,aero:1}],
   trajets:[{a:"dakar",b:"touba",place:6000,voiture:22000},{a:"aibd",b:"touba",place:8000,voiture:30000},{a:"aibd",b:"dakar",place:5000,voiture:18000}],
   fisse:[{r:"touba>dakar",o:"07:00",f:4},{r:"dakar>touba",o:"17:00",f:4}],viaggi:[{r:"touba>dakar",d:t,o:"07:00",f:0,cap:4},{r:"touba>dakar",d,o:"07:00",f:2,cap:4}]}}
@@ -295,6 +315,8 @@ async function boot(){
     try{const x=await SB.rpc("navette_page",{p_slug:SLUG});if(x.error)throw x.error;D=x.data}catch(e){fermee("Pas de connexion","Vérifiez internet et réessayez.");return}
     if(!D){fermee("Page introuvable","Vérifiez le lien avec votre transporteur.");return}
     if(D.inactif){D=null;if(!r){fermee("Réservations fermées pour le moment","Appelez directement votre transporteur.");return}}}
+  if(D&&SB&&!("logo" in D)){try{const x=await SB.rpc("navette_vitrine",{p_slug:SLUG});if(!x.error&&x.data)Object.assign(D,x.data)}catch(e){}}
+  if(D)vitrine();
   if(D){document.title="Réserver · "+(D.nom||"Navette");$("titre").innerHTML=`${esc(D.nom||"Navette")}<span>${esc(froms().map(l=>l.n).slice(0,4).join(" · "))}</span>`;
     const tl=String(D.tels||"").split(/[,;/]/).map(t=>t.trim()).filter(Boolean);
     $("contact").innerHTML=tl.length?"Une question ? Appelez le "+tl.map(t=>`<a href="tel:+${phoneDigits(t)}">${esc(t)}</a>`).join(" ou "):"";

@@ -75,6 +75,12 @@ h2{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:24px 0 10
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.dark{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .btn.green{background:var(--green);color:#fff;border-color:var(--green)}
+.imgrow{display:flex;gap:10px;flex-wrap:wrap}
+.imgbox{width:150px;display:grid;gap:6px;align-content:start}
+.imgbox img{width:150px;height:94px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#fff}
+.imgbox.lg img{height:96px;object-fit:contain}
+.imgbox.add{height:94px;border:2px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;font-weight:700;color:var(--muted);cursor:pointer}
+.imgbox.add.lg{height:96px}
 .btn.small{padding:8px 12px;font-size:.95rem;min-height:40px}
 .btn.danger{color:var(--red)}
 .btn.full{width:100%}
@@ -228,7 +234,7 @@ let S=null, SB=null, USER=null, DEMO=false, MODE="boot", AB=null, snap={}, lastP
 let tab="voyages", REQ=[], reqErr=false, reqAt=null, pubSt={t:0,err:""}, pubT=null;
 const COLS=["viaggi","spese"];
 function baseSet(){return{nom:"",gerant:"",tels:"",wave:"",om:"",formule:"premium",lieux:[],perso:[],trajets:{},fisse:[],
-  vehicules:[{id:"v1",nom:"Voiture 1",places:4,chauffeur:"",tel:""}],slug:"",ntfy:"tn-"+uid()+uid()}}
+  vehicules:[{id:"v1",nom:"Voiture 1",places:4,chauffeur:"",tel:""}],slug:"",ntfy:"tn-"+uid()+uid(),logo:"",photos:[],infos:""}}
 function emptyS(){return{set:baseSet(),viaggi:[],spese:[]}}
 function seed(){
   const t=today(),d=addDays(t,1);
@@ -308,6 +314,7 @@ function pageData(){const t0=today(),t14=addDays(t0,14),rs=routesOn();
   const lieux=S.set.lieux.map(id=>{const l=lieu(id);return{id,n:l.n,lat:l.lat||null,lng:l.lng||null,aero:l.aero?1:0}});
   const trajets=Object.entries(S.set.trajets).filter(([k,t])=>t.on&&k.split("|").every(x=>S.set.lieux.includes(x))).map(([k,t])=>({a:k.split("|")[0],b:k.split("|")[1],place:+t.place||0,voiture:+t.voiture||0}));
   return{nom:S.set.nom,tels:S.set.tels,wave:S.set.wave,om:S.set.om,lieux,trajets,ntfy:S.set.ntfy,
+    logo:S.set.logo||"",infos:S.set.infos||"",photos:F().itin?(S.set.photos||[]).filter(u=>/^https:/.test(u)).slice(0,3):[],
     fisse:S.set.fisse.filter(f=>rs.includes(f.route)).map(f=>({r:f.route,o:f.ora,f:+veh(f.veh).places||4})),
     viaggi:S.viaggi.filter(v=>v.data>=t0&&v.data<=t14&&rs.includes(v.route)).map(v=>({r:v.route,d:v.data,o:v.ora,f:Math.max(0,cap(v)-occ(v)),cap:cap(v)}))}}
 function schedulePub(){if(DEMO||!USER||!S.set.slug)return;clearTimeout(pubT);pubT=setTimeout(publish,2500)}
@@ -636,6 +643,19 @@ function vReglages(){const s=S.set,fm=F(),a=abState(),rs=S.set.lieux;
     ${DEMO?`<p class="note">Avec un compte, votre page s'ouvre avec ce lien.</p>`:`<button class="btn dark" data-a="pub">Enregistrer et mettre en ligne</button>`}
     ${u?`<div class="lnk">${esc(u)}</div><div class="row"><a class="btn green" href="https://wa.me/?text=${encodeURIComponent("Réservez votre place avec "+(s.nom||"nous")+" en 1 minute : "+u)}" target="_blank" rel="noopener">Partager sur WhatsApp</a><button class="btn" data-a="copyLink">Copier le lien</button><a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Voir la page</a></div>`:""}
     <p class="note" id="pubNote">${DEMO?"":pubSt.err?`<b style="color:var(--red)">${esc(pubSt.err)}</b>`:pubSt.t?"Page à jour à "+new Date(pubSt.t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+" : villes, prix, horaires et places libres des 14 prochains jours.":s.slug?"":"Choisissez un code puis mettez en ligne."}</p></div>`;
+  // logo, infos et photos de la page
+  const ph=s.photos||[];
+  h+=`<h2>Logo et photos de ma page</h2><div class="card"><p class="note">Ce que vos clients voient en haut de votre page de réservation. Si vous ne mettez rien, la page reste comme elle est.</p>
+    <div class="lbl" style="font-weight:800">Logo</div>
+    <div class="imgrow">${s.logo?`<div class="imgbox lg"><img src="${esc(s.logo)}" alt="Logo"><button class="btn small danger" data-a="delLogo">Enlever</button></div>`:""}
+      ${phBusy==="logo"?`<div class="imgbox add lg"><span>Envoi…</span></div>`:`<label class="imgbox add lg"><span>${s.logo?"Changer le logo":"+ Ajouter mon logo"}</span><input type="file" accept="image/*" data-pick="logo" hidden></label>`}</div>
+    <label>Infos pour les clients (horaires, confort, bagages…)<textarea id="s-infos" rows="3" maxlength="300" placeholder="ex. Départs tous les jours · Voiture climatisée · Bagages inclus">${esc(s.infos||"")}</textarea></label>
+    <div class="lbl" style="font-weight:800">Photos (3 maximum)</div>
+    ${fm.itin?`<div class="imgrow">${ph.map((u,i)=>`<div class="imgbox"><img src="${esc(u)}" alt="Photo ${i+1}"><div class="row" style="gap:6px">${i?`<button class="btn small" data-a="firstPhoto" data-v="${i}">★ 1re</button>`:""}<button class="btn small danger" data-a="delPhoto" data-v="${i}">Enlever</button></div></div>`).join("")}
+      ${phBusy==="photo"?`<div class="imgbox add"><span>Envoi…</span></div>`:ph.length<3?`<label class="imgbox add"><span>+ Ajouter une photo</span><input type="file" accept="image/*" data-pick="photo" hidden></label>`:""}</div>
+      <p class="note">Votre voiture dedans et dehors, une promo… Elles défilent en haut de la page.</p>`
+    :`<p class="note">Avec la formule <b>Pro</b> ou <b>Premium</b>, ajoutez jusqu'à 3 photos (votre voiture, une promo…) en haut de votre page.</p>`}
+    ${DEMO?"":`<p class="note">Après un changement, touchez « Enregistrer et mettre en ligne » plus haut, ou attendez quelques secondes.</p>`}</div>`;
   // notifications
   h+=`<h2>Alerte sur le téléphone</h2><div class="card"><p class="note">Pour que le téléphone sonne à chaque réservation : installez l'app gratuite <b>ntfy</b> (App Store ou Play Store), touchez <b>+</b> et écrivez ce nom :</p>
     <div class="lnk" style="user-select:all">${esc(s.ntfy)}</div><button class="btn small" style="justify-self:start" data-a="copyNtfy">Copier le nom</button><p class="note">Gardez-le pour vous : l'alerte dit seulement « nouvelle réservation », les détails sont dans l'app.</p></div>`;
@@ -649,6 +669,8 @@ function vReglages(){const s=S.set,fm=F(),a=abState(),rs=S.set.lieux;
 function bindReglages(){
   const svc={"s-nom":"nom","s-gerant":"gerant","s-tels":"tels","s-wave":"wave","s-om":"om"};
   for(const [id,f] of Object.entries(svc)){const e=$(id);if(e)e.onchange=()=>{S.set[f]=e.value.trim();save();if(f==="nom")render()}}
+  const inf=$("s-infos");if(inf)inf.onchange=()=>{S.set.infos=inf.value.trim().slice(0,300);save()};
+  document.querySelectorAll("[data-pick]").forEach(i=>i.onchange=()=>pickImg(i));
   const sl=$("s-slug");if(sl)sl.onchange=()=>{const v=sl.value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,30);sl.value=v;S.set.slug=v;save();render()};
   document.querySelectorAll("[data-tr]").forEach(e=>e.onchange=()=>{const k=e.dataset.tr,f=e.dataset.f;S.set.trajets[k]=S.set.trajets[k]||{on:0,place:0,voiture:0};
     S.set.trajets[k][f]=f==="on"?(e.checked?1:0):(+e.value||0);save();if(f==="on")render()});
@@ -659,6 +681,25 @@ function bindReglages(){
     if(f==="places"){const n=Math.max(1,Math.min(60,+e.value||4));const over=S.viaggi.some(t=>t.veh===v.id&&t.data>=today()&&occ(t)>n);if(over){toast("Des voyages ont déjà plus de passagers");e.value=v.places;return}v.places=n}else v[f]=e.value.trim();save()});
   document.querySelectorAll("[data-fx]").forEach(e=>e.onchange=()=>{const f=S.set.fisse.find(x=>x.id===e.dataset.fx);if(!f)return;f[e.dataset.f]=e.value;save()});
 }
+
+/* =================== logo et photos (page clients) =================== */
+const PH_BUCKET="seck-photos";let phBusy="";
+function shrinkImg(file,W,H,q,fit){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=()=>rej(new Error("img"));im.onload=()=>{
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,W,H);
+  const sc=fit==="contain"?Math.min(W/im.width,H/im.height):Math.max(W/im.width,H/im.height),w=im.width*sc,hh=im.height*sc;x.drawImage(im,(W-w)/2,(H-hh)/2,w,hh);
+  const url=c.toDataURL("image/jpeg",q);if(c.toBlob)c.toBlob(b=>res({blob:b,url}),"image/jpeg",q);else res({blob:null,url})};im.src=r.result};r.readAsDataURL(file)})}
+async function pickImg(inp){const f=inp.files&&inp.files[0],kind=inp.dataset.pick;inp.value="";if(!f||phBusy)return;
+  if(kind==="photo"&&(S.set.photos||[]).length>=3)return toast("3 photos maximum");
+  phBusy=kind;render();
+  try{const logo=kind==="logo",r=await shrinkImg(f,logo?320:1000,logo?320:625,logo?0.85:0.74,logo?"contain":"cover");let url=r.url;
+    if(!DEMO&&SB&&USER){if(!r.blob)throw new Error("blob");const path=USER.id+"/"+uid()+".jpg";
+      const up=await SB.storage.from(PH_BUCKET).upload(path,r.blob,{contentType:"image/jpeg",cacheControl:"31536000",upsert:false});if(up.error)throw up.error;
+      url=SB.storage.from(PH_BUCKET).getPublicUrl(path).data.publicUrl}
+    if(logo){rmImg(S.set.logo);S.set.logo=url}else{S.set.photos=S.set.photos||[];S.set.photos.push(url)}save();toast(logo?"Logo ajouté ✓":"Photo ajoutée ✓")}
+  catch(e){const m=String(e&&e.message||e);toast(/img|blob/.test(m)?"Photo illisible, essayez une autre":/fetch|network|Failed/i.test(m)?"Pas de connexion : la photo n'est pas envoyée":/bucket|not found/i.test(m)?"Photos pas encore activées (étape Supabase)":/row-level|policy|Unauthorized|403/i.test(m)?"Photo refusée":"Photo non envoyée : "+m)}
+  phBusy="";render()}
+function rmImg(u){if(DEMO||!SB||!USER||!u)return;const mark="/object/public/"+PH_BUCKET+"/";if(!u.includes(mark))return;
+  const p=decodeURIComponent(u.split(mark)[1].split("?")[0]);if(p.startsWith(USER.id+"/"))SB.storage.from(PH_BUCKET).remove([p]).catch(()=>{})}
 
 /* =================== actions (boutons) =================== */
 const ACT={
@@ -692,6 +733,9 @@ const ACT={
   logout:async()=>{if(DEMO){DEMO=false;try{localStorage.removeItem(KEY_D)}catch(e){}showAuth("login");return}
     try{await SB.auth.signOut()}catch(e){}try{localStorage.removeItem(KEY_O)}catch(e){}setME(null);USER=null;S=null;showAuth("login")},
   chgPass:async()=>{const p=val("g-pw");if(p.length<6)return toast("6 caractères minimum");try{const r=await SB.auth.updateUser({password:p});if(r.error)throw r.error;toast("Mot de passe changé");$("g-pw").value=""}catch(e){toast("Pas de connexion, réessayez")}},
+  delLogo:(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Sûr ?";return}rmImg(S.set.logo);S.set.logo="";save();render()},
+  delPhoto:(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Sûr ?";return}const x=S.set.photos.splice(+v,1)[0];rmImg(x);save();render()},
+  firstPhoto:v=>{const x=S.set.photos.splice(+v,1)[0];S.set.photos.unshift(x);save();render()},
   patSet:()=>lockScreen("pset1"),drvIn:()=>lockScreen("drv"),drvOut:()=>lockScreen("out"),
   drvPaid:(v,b)=>{if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Sûr ?";return}const[t,p]=v.split("|"),dv=drvState(),tr=S.viaggi.find(x=>x.id===t);
     if(!tr||!dv||dv==="bad"||tr.veh!==dv.id)return;const x=tr.pax.find(y=>y.id===p);if(!x)return;x.pagato=+x.prezzo||0;save();render();toast("Encaissé ✓")},
