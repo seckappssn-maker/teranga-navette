@@ -9,8 +9,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Teranga Navette – l'application des transporteurs">
 <meta property="og:description" content="Voyages, places, réservations en ligne, itinéraire GPS, Wave et Orange Money, comptes.">
-<meta property="og:url" content="https://seckappssn-maker.github.io/teranga-navette/">
-<meta property="og:image" content="https://seckappssn-maker.github.io/teranga-navette/copertina.png">
+<meta property="og:url" content="https://navette.terangaapps.com/">
+<meta property="og:image" content="https://navette.terangaapps.com/copertina.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -314,7 +314,7 @@ function abState(){if(DEMO||!AB)return{st:"ok",left:99,trial:false};const end=[A
 const abPrix=()=>(AB&&AB.price)||F().prix;
 
 /* =================== page de réservation publique =================== */
-const resaBase=()=>{const h=location.href.split(/[?#]/)[0].replace(/[^/]*$/,"");return /^https?:/.test(location.protocol)?h+"reserver.html":"https://seckappssn-maker.github.io/teranga-navette/reserver.html"};
+const resaBase=()=>{const h=location.href.split(/[?#]/)[0].replace(/[^/]*$/,"");return /^https?:/.test(location.protocol)?h+"reserver.html":"https://navette.terangaapps.com/reserver.html"};
 const resaUrl=()=>S.set.slug?resaBase()+"?c="+encodeURIComponent(S.set.slug):"";
 function pageData(){const t0=today(),t14=addDays(t0,14),rs=routesOn();
   const lieux=S.set.lieux.map(id=>{const l=lieu(id);return{id,n:l.n,lat:l.lat||null,lng:l.lng||null,aero:l.aero?1:0}});
