@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head><script>/* terangaapps.com : passe en https dès que le certificat est prêt */(function(){try{var l=location;if(l.protocol==="http:"&&/(^|\.)terangaapps\.com$/.test(l.hostname)){var u="https://"+l.host+l.pathname+l.search+l.hash;fetch("https://"+l.host+"/CNAME",{mode:"no-cors",cache:"no-store"}).then(function(){l.replace(u)}).catch(function(){})}}catch(e){}})();</script>
-<meta charset="utf-8">
+<meta charset="utf-8"><script>/* Essai gratuit : 1 mois pour toute inscription jusqu'au 31/01/2027 (offre de lancement), puis 14 jours. Même règle sur le serveur (Supabase seck_essai_fin). */window.ESSAI_LANCEMENT=Date.now()<Date.UTC(2027,1,1);window.ESSAI_TXT=ESSAI_LANCEMENT?'1 mois gratuit':'14 jours gratuits';window.ESSAI_TXT_LONG=ESSAI_LANCEMENT?"1 mois d'essai gratuit":"14 jours d'essai gratuit";window.ESSAI_IT=ESSAI_LANCEMENT?'1 mese gratis':'14 giorni gratis';window.ESSAI_JOURS=ESSAI_LANCEMENT?30:14;</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f6b4a">
 <title>Teranga Navette</title>
@@ -10,7 +10,7 @@
 <meta property="og:title" content="Teranga Navette – l'application des transporteurs">
 <meta property="og:description" content="Voyages, places, réservations en ligne, itinéraire GPS, Wave et Orange Money, comptes.">
 <meta property="og:url" content="https://navette.terangaapps.com/">
-<meta property="og:image" content="https://navette.terangaapps.com/copertina.png">
+<meta property="og:image" content="https://navette.terangaapps.com/copertina.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -370,7 +370,7 @@ function render(){
   if(tab==="comptes")bindComptes(); if(tab==="reglages")bindReglages();
 }
 function banner(a){
-  if(DEMO)return`<div class="banner"><div><b>Mode démo :</b> les données sont des exemples, rien n'est envoyé. Pour l'utiliser vraiment, créez votre compte (7 jours gratuits).</div><button class="btn small green" data-a="quitDemo">Créer mon compte</button></div>`;
+  if(DEMO)return`<div class="banner"><div><b>Mode démo :</b> les données sont des exemples, rien n'est envoyé. Pour l'utiliser vraiment, créez votre compte (${ESSAI_TXT}).</div><button class="btn small green" data-a="quitDemo">Créer mon compte</button></div>`;
   if(S.exemple)return"";
   const needSetup=!S.set.lieux.length||!routesOn().length;
   let h="";
@@ -792,11 +792,11 @@ function showAuth(m){MODE="auth";authMode=m||authMode;$("app").innerHTML="";$("s
     <div class="card">${su?`<label>Nom de votre service<input id="a-nom" placeholder="ex. Car Touba" autocomplete="organization"></label>`:""}
       <label>Votre numéro de téléphone<input id="a-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="77 123 45 67"></label>
       <label>Mot de passe${su?" (6 caractères minimum)":""}<input id="a-pw" type="password" autocomplete="${su?"new-password":"current-password"}"></label>
-      <button class="btn green full" id="a-go">${su?"Créer mon compte · 7 jours gratuits":"Entrer"}</button><p class="note" id="a-msg" style="color:var(--red);font-weight:700"></p>
+      <button class="btn green full" id="a-go">${su?"Créer mon compte · "+ESSAI_TXT:"Entrer"}</button><p class="note" id="a-msg" style="color:var(--red);font-weight:700"></p>
       ${su?"":`<p class="note">Mot de passe oublié ? <a href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, j'ai oublié mon mot de passe Teranga Navette.")}" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp</a></p>`}</div>`
     :`<div class="banner"><div>Les inscriptions ouvrent bientôt. En attendant, essayez la démo.</div></div>`}
     <button class="btn full" id="a-demo">Essayer la démo sans compte</button>
-    <div class="card" style="gap:6px"><b>Formules</b>${Object.values(FORMULES).map(f=>`<div class="p-sub"><b style="color:var(--ink)">${f.nom} · ${fcfa(f.prix)}/mois</b> — ${f.txt}</div>`).join("")}<p class="note">7 jours d'essai gratuit, sans rien payer.</p></div>
+    <div class="card" style="gap:6px"><b>Formules</b>${Object.values(FORMULES).map(f=>`<div class="p-sub"><b style="color:var(--ink)">${f.nom} · ${fcfa(f.prix)}/mois</b> — ${f.txt}</div>`).join("")}<p class="note">${ESSAI_TXT_LONG}, sans rien payer.</p></div>
     <a class="btn" href="https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent("Salam, je veux des informations sur Teranga Navette.")}" target="_blank" rel="noopener">Une question ? WhatsApp</a>`;
   $("full").hidden=false;
   document.querySelectorAll("[data-k2]").forEach(b=>b.onclick=()=>showAuth(b.dataset.k2));
@@ -811,7 +811,7 @@ async function doAuth(){const su=authMode==="signup",msg=$("a-msg");msg.textCont
     USER=r.data.user||(r.data.session&&r.data.session.user);
     const st=await SB.rpc("navette_start",{p_nom:nom||"",p_tel:ph});if(st.error)throw st.error;
     await openAccount(su?nom:"",ph)}
-  catch(e){const m=String(e&&e.message||e);b.disabled=false;b.textContent=su?"Créer mon compte · 7 jours gratuits":"Entrer";
+  catch(e){const m=String(e&&e.message||e);b.disabled=false;b.textContent=su?"Créer mon compte · "+ESSAI_TXT:"Entrer";
     msg.textContent=/already|registered/i.test(m)?"Ce numéro a déjà un compte : touchez « J'ai un compte ».":/invalid login|credentials/i.test(m)?"Numéro ou mot de passe faux.":/confirm/i.test(m)?"Compte pas encore activé. Écrivez-nous sur WhatsApp.":/fetch|network/i.test(m)?"Pas de connexion internet.":m}}
 async function openAccount(nom,ph){
   const c=readCache();
